@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <IntakeLayout
       steps={intakeSteps}
       activeStepIndex={4} // Set the correct index for 'Medical Review' step
-      backHref="/intake/weight_goal"
+      backHref="/intake/dob"
     >
       {children}
     </IntakeLayout>

@@ -12,8 +12,8 @@ type GenderOption = {
 };
 
 const GENDER_OPTIONS: GenderOption[] = [
-  { id: "form_gender_male", value: "male", label: "Male", iconSrc: "/assets/icons/male.svg" },
-  { id: "form_gender_female", value: "female", label: "Female", iconSrc: "/assets/icons/female.svg" },
+  { id: "form_gender_male", value: "male", label: "Male", iconSrc: "/assets/Icons/male.svg" },
+  { id: "form_gender_female", value: "female", label: "Female", iconSrc: "/assets/Icons/female.svg" },
 ];
 
 export default function GenderAgePage() {

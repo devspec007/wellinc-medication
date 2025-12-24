@@ -12,9 +12,9 @@ type SpeedOption = {
 };
 
 const SPEED_OPTIONS: SpeedOption[] = [
-    { id: "form_speed_good", value: "speed_good", label: "Works for me", iconSrc: "/assets/icons/check.svg" },
-    { id: "form_speed_faster", value: "speed_faster", label: "I want it faster", iconSrc: "/assets/icons/run.svg" },
-    { id: "form_speed_too_fast", value: "speed_too_fast", label: "That's too fast", iconSrc: "/assets/icons/hourglass_low.svg" },
+    { id: "form_speed_good", value: "speed_good", label: "Works for me", iconSrc: "/assets/Icons/check.svg" },
+    { id: "form_speed_faster", value: "speed_faster", label: "I want it faster", iconSrc: "/assets/Icons/run.svg" },
+    { id: "form_speed_too_fast", value: "speed_too_fast", label: "That's too fast", iconSrc: "/assets/Icons/hourglass_low.svg" },
 ];
 
 export default function SpeedPage() {

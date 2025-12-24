@@ -12,9 +12,9 @@ type PriorityOption = {
 };
 
 const PRIORITY_OPTIONS: PriorityOption[] = [
-    { id: "form_priority_lose_weight", value: "lose_weight", label: "Lose Weight", iconSrc: "/assets/icons/scale.svg" },
-    { id: "form_priority_gain_muscle", value: "gain_muscle", label: "Gain Muscle", iconSrc: "/assets/icons/muscle.svg" },
-    { id: "form_priority_maintain_my_current_body", value: "maintain_my_current_body", label: "Maintain My Current Body", iconSrc: "/assets/icons/ok.svg" },
+    { id: "form_priority_lose_weight", value: "lose_weight", label: "Lose Weight", iconSrc: "/assets/Icons/scale.svg" },
+    { id: "form_priority_gain_muscle", value: "gain_muscle", label: "Gain Muscle", iconSrc: "/assets/Icons/muscle.svg" },
+    { id: "form_priority_maintain_my_current_body", value: "maintain_my_current_body", label: "Maintain My Current Body", iconSrc: "/assets/Icons/ok.svg" },
 ];
 
 export default function PrioritiesPage() {

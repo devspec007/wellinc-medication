@@ -12,9 +12,9 @@ type SleepOption = {
 };
 
 const SLEEP_OPTIONS: SleepOption[] = [
-    { id: "form_sleep_good", value: "good", label: "Pretty good", iconSrc: "/assets/icons/bed.svg" },
-    { id: "form_sleep_restless", value: "restless", label: "A bit restless", iconSrc: "/assets/icons/annoyed.svg" },
-    { id: "form_sleep_bad", value: "bad", label: "I don't sleep well", iconSrc: "/assets/icons/bed_off.svg" },
+    { id: "form_sleep_good", value: "good", label: "Pretty good", iconSrc: "/assets/Icons/bed.svg" },
+    { id: "form_sleep_restless", value: "restless", label: "A bit restless", iconSrc: "/assets/Icons/annoyed.svg" },
+    { id: "form_sleep_bad", value: "bad", label: "I don't sleep well", iconSrc: "/assets/Icons/bed_off.svg" },
 ];
 
 export default function SleepPage() {

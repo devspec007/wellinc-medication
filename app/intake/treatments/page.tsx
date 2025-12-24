@@ -428,15 +428,15 @@ export default function TreatmentsPage() {
                     <div className="flex items-center justify-end gap-2">
                       <img
                         className="h-6"
-                        src="/assets/icons/affirm_logo.svg"
+                        src="/assets/Icons/affirm_logo.svg"
                       />
                       <img
                         className="h-6"
-                        src="/assets/icons/klarna_logo.svg"
+                        src="/assets/Icons/klarna_logo.svg"
                       />
                       <img
                         className="h-6"
-                        src="/assets/icons/afterpay_logo.svg"
+                        src="/assets/Icons/afterpay_logo.svg"
                       />
                     </div>
                   </div>
@@ -535,21 +535,21 @@ export default function TreatmentsPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <img className="h-7" src="/assets/icons/truck.svg" alt="Truck" />
+            <img className="h-7" src="/assets/Icons/truck.svg" alt="Truck" />
             Free Expedited Shipping
           </div>
 
           <div className="flex items-center gap-2">
             <img
               className="h-7"
-              src="/assets/icons/vaccines.svg"
+              src="/assets/Icons/vaccines.svg"
               alt="Vaccines"
             />
             Home Injection Kit Included
           </div>
 
           <div className="flex items-center gap-2">
-            <img className="h-7" src="/assets/icons/chat.svg" alt="Chat" />
+            <img className="h-7" src="/assets/Icons/chat.svg" alt="Chat" />
             24/7 Customer Support
           </div>
         </div>
@@ -565,15 +565,15 @@ export default function TreatmentsPage() {
       <div className="mt-12">
         <div className="text-lg font-bold">All major credit cards accepted</div>
         <div className="flex items-center gap-2 mt-4">
-          <img className="h-6" src="/assets/icons/visa-ee71e0b5.svg" />
-          <img className="h-6" src="/assets/icons/mastercard-cd70929d.svg" />
-          <img className="h-6" src="/assets/icons/amex-5a1bd533.svg" />
-          <img className="h-6" src="/assets/icons/discover-62e417a8.svg" />
-          <img className="h-6" src="/assets/icons/apple_pay-8671b239.svg" />
-          <img className="h-6" src="/assets/icons/google_pay-abef4348.svg" />
+          <img className="h-6" src="/assets/Icons/visa-ee71e0b5.svg" />
+          <img className="h-6" src="/assets/Icons/mastercard-cd70929d.svg" />
+          <img className="h-6" src="/assets/Icons/amex-5a1bd533.svg" />
+          <img className="h-6" src="/assets/Icons/discover-62e417a8.svg" />
+          <img className="h-6" src="/assets/Icons/apple_pay-8671b239.svg" />
+          <img className="h-6" src="/assets/Icons/google_pay-abef4348.svg" />
         </div>
         <div className="mt-4">
-          <img className="h-10" src="/assets/icons/hsa_fsa-b8c1e240.png" />
+          <img className="h-10" src="/assets/Icons/hsa_fsa-b8c1e240.png" />
         </div>
       </div>
     </div>

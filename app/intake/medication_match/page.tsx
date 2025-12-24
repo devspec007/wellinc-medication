@@ -12,8 +12,8 @@ type MedicationMatchOption = {
 };
 
 const MEDICATION_MATCH_OPTIONS: MedicationMatchOption[] = [
-  { id: "form_medication_match_affordability", value: "affordability", label: "Affordability", iconSrc: "/assets/icons/receipt.svg" },
-  { id: "form_medication_match_potency", value: "potency", label: "Potency", iconSrc: "/assets/icons/trending_up.svg" },
+  { id: "form_medication_match_affordability", value: "affordability", label: "Affordability", iconSrc: "/assets/Icons/receipt.svg" },
+  { id: "form_medication_match_potency", value: "potency", label: "Potency", iconSrc: "/assets/Icons/trending_up.svg" },
 ];
 
 export default function MedicationMatchPage() {

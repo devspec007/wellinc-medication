@@ -12,9 +12,9 @@ type MotivatedOption = {
 };
 
 const MOTIVATED_OPTIONS: MotivatedOption[] = [
-    { id: "form_motivated_ready", value: "ready", label: "I'm Ready!", iconSrc: "/assets/icons/happy.svg" },
-    { id: "form_motivated_hopeful", value: "hopeful", label: "I'm feeling hopeful", iconSrc: "/assets/icons/smile.svg" },
-    { id: "form_motivated_cautious", value: "cautious", label: "I'm cautious", iconSrc: "/assets/icons/unamused.svg" },
+    { id: "form_motivated_ready", value: "ready", label: "I'm Ready!", iconSrc: "/assets/Icons/happy.svg" },
+    { id: "form_motivated_hopeful", value: "hopeful", label: "I'm feeling hopeful", iconSrc: "/assets/Icons/smile.svg" },
+    { id: "form_motivated_cautious", value: "cautious", label: "I'm cautious", iconSrc: "/assets/Icons/unamused.svg" },
 ];
 
 export default function MotivatedPage() {

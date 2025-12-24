@@ -85,6 +85,7 @@ export default function ContactPage() {
             } else if (res.token) {
                 localStorage.setItem("token", res.token);
                 toast.success("Sign up successful!");
+                router.push("/intake/treatments");
             }
         });
     };

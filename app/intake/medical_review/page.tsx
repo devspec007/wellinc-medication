@@ -41,7 +41,7 @@ export default function MedicalReviewPage() {
     setBmi(bmi.toFixed(2).toString());
     setWeight(weight.toString());
     setWeightGoal(weight_goal_data.weightGoal || "");
-    const weeks = ((weight - weight_goal_data.weightGoal) / 6.25).toFixed(2);
+    const weeks = ((weight - weight_goal_data.weightGoal) / 2.85).toFixed(2);
     setWeeks(Number(weeks));
   }, []);
 

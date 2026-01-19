@@ -13,7 +13,7 @@ export default function Testimonial2Page() {
         window.location.href = "/intake/health_conditions";
     };
     return (
-        gender === "female" ? (
+        gender === "male" ? (
             <div className="w-full">
                 <div className="title">
                     "I am
@@ -49,7 +49,7 @@ export default function Testimonial2Page() {
                     />
                 </div>
             </div>
-        ) : gender === "male" ? (
+        ) : gender === "female" ? (
             <div className="w-full">
                 <div className="title">
                     "I take it once a week and I cannot beleive

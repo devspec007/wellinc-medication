@@ -43,10 +43,10 @@ export default function MedicationMatchPage() {
       toast.error("Please select your answer.");
       return;
     }
-    if (!drugOption) {
-      toast.error("Please select your answer.");
-      return;
-    }
+    // if (!drugOption) {
+    //   toast.error("Please select your answer.");
+    //   return;
+    // }
     localStorage.setItem("medication_match", JSON.stringify({ medication_match: medicationMatch, drug_option: drugOption }));
     window.location.href = "/intake/current_medications";
   };
@@ -81,7 +81,7 @@ export default function MedicationMatchPage() {
           </div>
         </fieldset>
       </div>
-      <div>
+      {/* <div>
         <fieldset className="space-y-6 md:space-y-8 mt-6">
           <div>
             <div className="label mb-1">
@@ -103,7 +103,7 @@ export default function MedicationMatchPage() {
             </div>
           </div>
         </fieldset>
-      </div>
+      </div> */}
       <div className="mt-12 sticky bottom-5">
         <input
           type="button"

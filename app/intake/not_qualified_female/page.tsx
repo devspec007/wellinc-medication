@@ -19,9 +19,6 @@ export default function NotQualifiedFemale() {
       <div className="mt-4">
         Based on your answers, your medical history you're not a great candidate for telemedicine. The safest course of action would have you consider working with a local doctor or clinic as certain complications may need closer monitoring or response times than telemedicine may allow.
       </div>
-      <div className="subtitle mt-4">
-        If you believe you're an exception and would like to have someone from our medical staff review more details or provide additional advice regarding your specific circumstances, you can schedule a call here <a className="underline" href="https://calendly.com/connie-direct-meds">Schedule a call with a Nurse</a>
-      </div>
       <div className="mt-12 sticky bottom-5">
         <input
           type="button"

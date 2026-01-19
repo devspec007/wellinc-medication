@@ -13,7 +13,7 @@ export default function SpeedFasterPage() {
         const goal_weight = goal_data.weightGoal || "";
         const speed_difference = Math.ceil(weight - goal_weight);
         setSpeedDifference(Number(speed_difference));
-        const weeks = Math.ceil(speed_difference / 5.25).toFixed(2);
+        const weeks = Math.ceil(speed_difference / 5).toFixed(2);
         setWeeks(Number(weeks));
     }, []);
 

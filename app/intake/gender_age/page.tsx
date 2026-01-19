@@ -30,19 +30,11 @@ export default function GenderAgePage() {
       return;
     }
     localStorage.setItem("gender", JSON.stringify({ gender }));
-    if (gender === "male") {
-      window.location.href = "/intake/unique_effects";
-    } else if (gender === "female") {
-      window.location.href = "/intake/pregnancy";
-    }
+    window.location.href = "/intake/unique_effects";
   };
 
   return (
     <div className="w-full">
-      <div className="title">
-        Medication can be tailored to
-        <span className="title-accent"> your unique needs</span>, so let's get to know you a little better.
-      </div>
       <div className="mt-6">
         <fieldset className="space-y-6 md:space-y-8">
           <div>

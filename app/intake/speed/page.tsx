@@ -32,7 +32,7 @@ export default function SpeedPage() {
         const goal_data = JSON.parse(localStorage.getItem("weight_goal") || "{}");
         const weight = data.weight || "";
         const goal_weight = goal_data.weightGoal || "";
-        const weeks = Math.ceil((weight - goal_weight) / 4.5).toFixed(2);
+        const weeks = Math.ceil((weight - goal_weight) / 2.5).toFixed(2);
         setWeeks(Number(weeks));
         setGoalWeight(Number(goal_weight));
     }, []);
@@ -55,7 +55,7 @@ export default function SpeedPage() {
     return (
         <div className="w-full">
             <div className="title">
-                With medication, you'll lose 4.5 to 5.0 pounds
+                With medication, you'll lose 2.5 to 5.0 pounds
                 <span className="title-accent"> per week</span>.
             </div>
             <div className="my-4 w-full h-[1pt] bg-brand-50"></div>

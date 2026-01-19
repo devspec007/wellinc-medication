@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <IntakeLayout
       steps={intakeSteps}
       activeStepIndex={1} // Set the correct index for 'Magic' step
-      backHref="/intake/ranking"
+      backHref="/intake/priorities"
     >
       {children}
     </IntakeLayout>

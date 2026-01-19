@@ -31,7 +31,7 @@ export default function PrioritiesPage() {
             return;
         }
         localStorage.setItem("priority", JSON.stringify({ priority }));
-        window.location.href = "/intake/ranking";
+        window.location.href = "/intake/magic";
     };
 
     return (

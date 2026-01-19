@@ -11,9 +11,9 @@ type WeightLossMedicationOption = {
 };
 
 const WEIGHT_LOSS_MEDICATION_OPTIONS: WeightLossMedicationOption[] = [
-    { id: "form_weight_loss_medications_semaglutide", value: "semaglutide", label: "Yes, I've taken Semaglutide (Ozempic or Wegovy)" },
-    { id: "form_weight_loss_medications_tirzepatide", value: "tirzepatide", label: "Yes, I've taken Tirzepatide (Mounjaro or Zepbound)" },
-    { id: "form_weight_loss_medications_not_currently_taking", value: "not_currently_taking", label: "I'm not currently taking a GLP-1 medication" },
+    { id: "form_weight_loss_medications_glp_1_medication", value: "glp_1_medication", label: "Yes, I've taken GLP-1 medication" },
+    { id: "form_weight_loss_medications_different_medication", value: "different_medication", label: "Yes, I've taken a differrent medication for weight loss" },
+    { id: "form_weight_loss_medications_no", value: "no", label: "No" },
 ];
 
 export default function WeightLossMedicationsPage() {
@@ -32,12 +32,12 @@ export default function WeightLossMedicationsPage() {
             return;
         }
         localStorage.setItem("weight_loss_medications", JSON.stringify({ weight_loss_medications: selectedWeightLossMedications }));
-        if (selectedWeightLossMedications === "semaglutide") {
-            window.location.href = "/intake/semaglutide";
-        } else if (selectedWeightLossMedications === "tirzepatide") {
-            window.location.href = "/intake/tirzepatide";
-        } else if (selectedWeightLossMedications === "not_currently_taking") {
-            window.location.href = "/intake/pain_medications";
+        if (selectedWeightLossMedications === "no") {
+            window.location.href = "/intake/diet_exercise_willingness";
+        } else if (selectedWeightLossMedications === "glp_1_medication") {
+            window.location.href = "/intake/glp_1_medication";
+        } else if (selectedWeightLossMedications === "different_medication") {
+            window.location.href = "/intake/different_medication";
         }
     };
     return (
@@ -46,7 +46,7 @@ export default function WeightLossMedicationsPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_weight_loss_medications">Have you taken medication for weight loss within the past month?</label>
+                            <label htmlFor="form_weight_loss_medications">Have you taken GLP-1 medication for weight loss within the past 4 weeks?</label>
                         </div>
                         <div className="w-full mt-4 w-full space-y-2">
                             {WEIGHT_LOSS_MEDICATION_OPTIONS.map(option => (

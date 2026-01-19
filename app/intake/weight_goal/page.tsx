@@ -45,7 +45,7 @@ export default function WeightGoalPage() {
         <span className="title-accent"> Your goal is our goal.</span>
       </div>
       <div className="title-sm mt-6">
-        What is your goal weight?
+        What is your goal weight (lbs)?
       </div>
 
       <div className="mt-4">

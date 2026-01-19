@@ -25,12 +25,16 @@ export default function HeightWeightPage() {
       return;
     }
     localStorage.setItem("height_weight", JSON.stringify({ feet, inches, weight }));
-    window.location.href = "/intake/weight_goal";
+    const bmi = (weight / ((feet * 12 + inches) ** 2)) * 703;
+    if (bmi < 27) {
+      window.location.href = "/intake/not_qualified_bmi";
+    } else {
+      window.location.href = "/intake/weight_goal";
+    }
   };
 
   return (
     <div className="w-full">
-      <img src="/assets/imgs/starter_img.webp" alt="Wellinc Gym" className="w-full h-auto rounded-lg" />
       <div className="title mt-4 max-w-[500px]">
         <span>Reach your goal weight fast</span>
         <span className="title-accent ml-[5px]">without restrictive diets and exercise.</span>

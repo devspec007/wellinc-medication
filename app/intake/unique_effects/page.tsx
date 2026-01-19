@@ -58,7 +58,11 @@ export default function UniqueEffectsPage() {
         }
 
         localStorage.setItem("unique_effects", JSON.stringify({ effects: selectedEffects }));
-        window.location.href = "/intake/priorities";
+        if (gender === "male") {
+            window.location.href = "/intake/priorities";
+        } else {
+            window.location.href = "/intake/pregnancy";
+        }
     };
 
     return (

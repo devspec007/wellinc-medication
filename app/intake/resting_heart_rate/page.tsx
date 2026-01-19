@@ -15,6 +15,7 @@ const RESTING_HEART_RATE_OPTIONS: RestingHeartRateOption[] = [
     { id: "form_resting_heart_rate_normal", value: "normal", label: "60-100 beats per minute (Normal)" },
     { id: "form_resting_heart_rate_slightly_fast", value: "slightly_fast", label: "101-110 beats per minute (Slightly Fast)" },
     { id: "form_resting_heart_rate_fast", value: "fast", label: ">110 beats per minute (Fast)" },
+    { id: "form_resting_heart_rate_not_sure", value: "not_sure", label: "I'm not sure" },
 ];
 
 export default function RestingHeartRatePage() {

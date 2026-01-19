@@ -12,24 +12,14 @@ type MoreHealthConditionOption = {
 
 const MORE_HEALTH_CONDITION_OPTIONS: MoreHealthConditionOption[] = [
     { id: "form_more_health_conditions_none_of_these", value: "none_of_these", label: "None of these" },
-    { id: "form_more_health_conditions_active_gall_bladder_disease", value: "active_gall_bladder_disease", label: "Active Gall Bladder Disease" },
-    { id: "form_more_health_conditions_hypertension", value: "hypertension", label: "Hypertension (high blood pressure)" },
-    { id: "form_more_health_conditions_sleep_apnea", value: "sleep_apnea", label: "Sleep apnea" },
-    { id: "form_more_health_conditions_type_2_diabetes_not_on_insulin", value: "type_2_diabetes_not_on_insulin", label: "Type 2 diabetes (not on insulin)" },
-    { id: "form_more_health_conditions_type_2_diabetes_on_insulin", value: "type_2_diabetes_on_insulin", label: "Type 2 diabetes (on insulin)" },
-    { id: "form_more_health_conditions_type_1_diabetes", value: "type_1_diabetes", label: "Type 1 diabetes" },
-    { id: "form_more_health_conditions_diabetic_retinopathy", value: "diabetic_retinopathy", label: "Diabetic retinopathy (diabetic eye disease), damage to the optic nerve from trauma or reduced blood flow, or blindness" },
-    { id: "form_more_health_conditions_warfarin", value: "warfarin", label: "Use of the blood thinner warfarin (Coumadin/Jantoven)" },
-    { id: "form_more_health_conditions_pancreatitis", value: "pancreatitis", label: "History of or current pancreatitis" },
-    { id: "form_more_health_conditions_medullary_thyroid_carcinoma", value: "medullary_thyroid_carcinoma", label: "Personal or family history of Medullary Thyroid Carcinoma (MTC), or Multiple Endocrine Neoplasia Syndrome Type 2 (MEN-2)" },
-    { id: "form_more_health_conditions_high_cholesterol", value: "high_cholesterol", label: "High cholesterol or triglycerides" },
-    { id: "form_more_health_conditions_severe_depression", value: "severe_depression", label: "Severe Depression" },
-    { id: "form_more_health_conditions_liver_disease_including_fatty_liver", value: "liver_disease_including_fatty_liver", label: "Liver disease, including fatty liver" },
-    { id: "form_more_health_conditions_congestive_heart_failure", value: "congestive_heart_failure", label: "Congestive heart failure" },
-    { id: "form_more_health_conditions_urinary_stress_incontinence", value: "urinary_stress_incontinence", label: "Urinary stress incontinence" },
-    { id: "form_more_health_conditions_polycystic_ovarian_syndrome", value: "polycystic_ovarian_syndrome", label: "Polycystic ovarian syndrome (PCOS)" },
-    { id: "form_more_health_conditions_clinically_proven_low_testosterone", value: "clinically_proven_low_testosterone", label: "Clinically proven low testosterone" },
-    { id: "form_more_health_conditions_osteoarthritis", value: "osteoarthritis", label: "Osteoarthritis" },
+    { id: "form_more_health_conditions_medullary_thyroid_cancer", value: "medullary_thyroid_cancer", label: "You or an immediate family member has a history of medullary thyroid cancer" },
+    { id: "form_more_health_conditions_diabetic_on_insulin", value: "diabetic_on_insulin", label: "Diabetic on Insulin or have a history of diabetic retinopathy" },
+    { id: "form_more_health_conditions_multiple_endocrine_neoplasia_type_2", value: "multiple_endocrine_neoplasia_type_2", label: "You or an immediate family member have a history of multiple endocrine neoplasia type 2" },
+    { id: "form_more_health_conditions_kidney_conditions", value: "kidney_conditions", label: "Kidney Conditions" },
+    { id: "form_more_health_conditions_seen_kidney_specialist", value: "seen_kidney_specialist", label: "Seen a kidney specialist in the past 12 months" },
+    { id: "form_more_health_conditions_history_of_solitary_kidney", value: "history_of_solitary_kidney", label: "History of solitary kidney, or kidney transplant" },
+    { id: "form_more_health_conditions_history_of_kidney_failure", value: "history_of_kidney_failure", label: "History of kidney failure" },
+    { id: "form_more_health_conditions_history_of_gi_disorders", value: "history_of_gi_disorders", label: "You have a history of GI disorders such as inflammatory bowel disease" },
 ];
 
 export default function MoreHealthConditionsPage() {

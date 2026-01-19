@@ -12,13 +12,17 @@ type HealthConditionOption = {
 
 const HEALTH_CONDITION_OPTIONS: HealthConditionOption[] = [
     { id: "form_health_conditions_none_of_these", value: "none_of_these", label: "None of these" },
-    { id: "form_health_conditions_kidney_disease", value: "kidney_disease", label: "End-stage kidney disease (on or about to be on dialysis)" },
+    { id: "form_health_conditions_kidney_disease", value: "kidney_disease", label: "End-stage kidney disease" },
     { id: "form_health_conditions_liver_disease", value: "liver_disease", label: "End-stage liver disease (cirrhosis)" },
-    { id: "form_health_conditions_suicidal_thoughts", value: "suicidal_thoughts", label: "Current suicidal thoughts and/or prior suicidal attempt" },
-    { id: "form_health_conditions_cancer", value: "cancer", label: "Cancer (active diagnosis, active treatment, or in remission or cancer-free for less than 5 continuous years - does not apply to non-melanoma skin cancer that was considered cured via simple excision)" },
-    { id: "form_health_conditions_organ_transplant", value: "organ_transplant", label: "History of organ transplant on anti-rejection medication" },
-    { id: "form_health_conditions_gastrointestinal_condition", value: "gastrointestinal_condition", label: "Severe gastrointestinal condition (gastroparesis, blockage, inflammatory bowel disease)" },
-    { id: "form_health_conditions_substance_use_disorder", value: "substance_use_disorder", label: "Current diagnosis of or treatment for alcohol, opioid, or substance use disorder/dependence" },
+    { id: "form_health_conditions_anorexia_bulimia", value: "anorexia_bulimia", label: "Anorexia/bulimia" },
+    { id: "form_health_conditions_suicidal_thoughts", value: "suicidal_thoughts", label: "Suicidal thoughts" },
+    { id: "form_health_conditions_active_cancer", value: "active_cancer", label: "Active cancer" },
+    { id: "form_health_conditions_organ_transplants", value: "organ_transplants", label: "Organ transplants" },
+    { id: "form_health_conditions_pancreatitis", value: "pancreatitis", label: "Pancreatitis" },
+    { id: "form_health_conditions_type_1_diabetes", value: "type_1_diabetes", label: "Type 1 diabetes" },
+    { id: "form_health_conditions_currently_on_insulin", value: "currently_on_insulin", label: "Currently on insulin" },
+    { id: "form_health_conditions_diabetic_retinopathy", value: "diabetic_retinopathy", label: "Diabetic retinopathy" },
+    { id: "form_health_conditions_thyroid_cyst", value: "thyroid_cyst", label: "Thyroid cyst" },
 ];
 
 export default function HealthConditionsPage() {

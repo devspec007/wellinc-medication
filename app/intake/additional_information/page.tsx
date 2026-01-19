@@ -35,7 +35,7 @@ export default function AdditionalInformationPage() {
             return;
         }
         localStorage.setItem("additional_information", JSON.stringify({ additional_information: selectedAdditionalInformation, additional_information_details: additionalInformationDetails }));
-        window.location.href = "/intake/interests";
+        window.location.href = "/intake/dob";
     };
     return (
         <div className="w-full">

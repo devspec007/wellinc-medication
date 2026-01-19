@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <IntakeLayout
       steps={intakeSteps}
       activeStepIndex={4} // Set the correct index for 'DOB' step
-      backHref="/intake/interests"
+      backHref="/intake/additional_information"
     >
       {children}
     </IntakeLayout>

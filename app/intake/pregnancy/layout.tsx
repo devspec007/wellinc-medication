@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <IntakeLayout
       steps={intakeSteps}
       activeStepIndex={1} // Set the correct index for 'Pregnancy' step
-      backHref="/intake/gender_age"
+      backHref="/intake/unique_effects"
     >
       {children}
     </IntakeLayout>

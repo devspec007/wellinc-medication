@@ -31,7 +31,11 @@ export default function PregnancyPage() {
             return;
         }
         localStorage.setItem("pregnancy", JSON.stringify({ pregnancy }));
-        window.location.href = "/intake/unique_effects";
+        if (pregnancy === "none_of_above") {
+            window.location.href = "/intake/priorities";
+        } else {
+            window.location.href = "/intake/not_qualified_female";
+        }
     };
     return (
         <div className="w-full">

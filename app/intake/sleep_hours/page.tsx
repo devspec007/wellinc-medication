@@ -36,7 +36,7 @@ export default function SleepHoursPage() {
     return (
         <div className="w-full">
             <div>
-                <img src="/assets/imgs/sleep.png" alt="Sleep Hours" className="w-full" />
+                <img src="/assets/imgs/sleep.jpg" alt="Sleep Hours" className="w-full" />
             </div>
             <div className="mt-4">
                 <fieldset className="space-y-6 md:space-y-8">

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import UniqueEffectsLayoutClient from "./UniqueEffectsLayoutClient";
+import IntakeLayout from "@/components/IntakeLayout";
+import { intakeSteps } from "@/lib/intakeSteps";
 
 export const metadata: Metadata = {
   title: "Unique Effects | Wellinc",
@@ -7,6 +8,14 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <UniqueEffectsLayoutClient>{children}</UniqueEffectsLayoutClient>;
+  return (
+    <IntakeLayout
+      steps={intakeSteps}
+      activeStepIndex={1} // Set the correct index for 'Unique Effects' step
+      backHref="/intake/gender_age"
+    >
+      {children}
+    </IntakeLayout>
+  );
 }
 

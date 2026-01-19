@@ -15,6 +15,7 @@ const BLOOD_PRESSURE_OPTIONS: BloodPressureOption[] = [
     { id: "form_blood_pressure_elevated", value: "elevated", label: "120-129/<80 (Elevated)" },
     { id: "form_blood_pressure_high_stage_1", value: "high_stage_1", label: "130-139/80-89 (High Stage 1)" },
     { id: "form_blood_pressure_high_stage_2", value: "high_stage_2", label: "≥140/90 (High Stage 2)" },
+    { id: "form_blood_pressure_not_sure", value: "not_sure", label: "I'm not sure" },
 ];
 
 export default function BloodPressurePage() {

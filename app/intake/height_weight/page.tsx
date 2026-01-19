@@ -16,7 +16,7 @@ export default function HeightWeightPage() {
   }, []);
 
   const handleNext = () => {
-    if (!feet || !inches) {
+    if (feet === "" || feet <= 0 || inches === "") {
       toast.error("Please enter a valid height.");
       return;
     }

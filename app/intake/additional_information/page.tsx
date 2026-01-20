@@ -34,6 +34,10 @@ export default function AdditionalInformationPage() {
             toast.error("Please select your answer.");
             return;
         }
+        if (selectedAdditionalInformation === "yes" && additionalInformationDetails.length == 0) {
+            toast.error("Please input your details.");
+            return;
+        }
         localStorage.setItem("additional_information", JSON.stringify({ additional_information: selectedAdditionalInformation, additional_information_details: additionalInformationDetails }));
         window.location.href = "/intake/dob";
     };

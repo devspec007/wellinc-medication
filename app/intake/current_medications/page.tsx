@@ -34,6 +34,10 @@ export default function CurrentMedicationsPage() {
             toast.error("Please select your answer.");
             return;
         }
+        if(selectedCurrentMedications === "yes" && currentMedicationsDetails.length == 0) {
+            toast.error("Please add some details.")
+            return;
+        }
         localStorage.setItem("current_medications", JSON.stringify({ current_medications: selectedCurrentMedications, current_medications_details: currentMedicationsDetails }));
         window.location.href = "/intake/motivated";
     };

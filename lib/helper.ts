@@ -26,4 +26,34 @@ export function getPlanColors(planKey: string) {
     };
   }
   return { backgroundColor: "#ffffff", color: "#000000" };
-};
+}
+
+export interface QuestionnaireParams {
+  type: string;
+  id: string;
+  text: string;
+  answer: string | string[];
+  options?: string[];
+}
+
+export function updateQuestionnaire({ type, id, text, answer, options }: QuestionnaireParams): void {
+  const existingQuestionnaire = JSON.parse(localStorage.getItem("Questionnaire") || "[]");
+  const newQuestion = {
+    type,
+    id,
+    text,
+    answer,
+    ...(options && { options }),
+  };
+  
+  // Check if question with same id exists
+  const existingIndex = existingQuestionnaire.findIndex((q: any) => q.id === id);
+  if (existingIndex !== -1) {
+    // Update existing question
+    existingQuestionnaire[existingIndex] = newQuestion;
+  } else {
+    // Push new question
+    existingQuestionnaire.push(newQuestion);
+  }
+  localStorage.setItem("Questionnaire", JSON.stringify(existingQuestionnaire));
+}

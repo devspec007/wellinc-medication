@@ -13,6 +13,7 @@ export default function TreatmentsPage() {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const selectPlanRef = useRef<HTMLDivElement | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
+  const fetchPlansRef = useRef<boolean>(false);
 
   const handleSelect = (keyString: "Semaglutide" | "Tirzepatide") => {
     const plan = plans?.find((p: any) =>
@@ -100,6 +101,10 @@ export default function TreatmentsPage() {
   };
 
   useEffect(() => {
+    // Prevent duplicate API calls (e.g., from React Strict Mode)
+    if (fetchPlansRef.current) return;
+    fetchPlansRef.current = true;
+
     const fetchPlans = async () => {
       setLoading(true);
       const token = localStorage.getItem("token");

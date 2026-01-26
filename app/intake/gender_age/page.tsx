@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type GenderOption = {
   id: string;
@@ -15,6 +16,8 @@ const GENDER_OPTIONS: GenderOption[] = [
   { id: "form_gender_male", value: "male", label: "Male", iconSrc: "/assets/Icons/male.svg" },
   { id: "form_gender_female", value: "female", label: "Female", iconSrc: "/assets/Icons/female.svg" },
 ];
+
+const TITLE = "Are you male or female?";
 
 export default function GenderAgePage() {
   const [gender, setGender] = useState<string | "">("");
@@ -30,6 +33,12 @@ export default function GenderAgePage() {
       return;
     }
     localStorage.setItem("gender", JSON.stringify({ gender }));
+    updateQuestionnaire({
+      type: "text",
+      id: "q3",
+      text: TITLE,
+      answer: gender,
+    });
     window.location.href = "/intake/unique_effects";
   };
 
@@ -39,7 +48,7 @@ export default function GenderAgePage() {
         <fieldset className="space-y-6 md:space-y-8">
           <div>
             <div className="label mb-1">
-              <label htmlFor="form_gender">Are you male or female?</label>
+              <label htmlFor="form_gender">{TITLE}</label>
             </div>
             <p className="note mt-2 mb-4">This helps us understand your body complexity and hormones so we can assess you better.</p>
             <div className="w-full mt-4 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">

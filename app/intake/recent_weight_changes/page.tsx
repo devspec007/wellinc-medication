@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type RecentWeightChangesOption = {
     id: string;
@@ -17,6 +18,8 @@ const RECENT_WEIGHT_CHANGES_OPTIONS: RecentWeightChangesOption[] = [
     { id: "form_recent_weight_changes_gained_little", value: "gained_little", label: "Gained a little" },
     { id: "form_recent_weight_changes_gained_significant_amount", value: "gained_significant_amount", label: "Gained a significant amount" },
 ];
+
+const TITLE = "Has your weight changed in the last year?";
 
 export default function RecentWeightChangesPage() {
     const [selectedRecentWeightChanges, setSelectedRecentWeightChanges] = useState<string | "">("");
@@ -34,6 +37,13 @@ export default function RecentWeightChangesPage() {
             return;
         }
         localStorage.setItem("recent_weight_changes", JSON.stringify({ recent_weight_changes: selectedRecentWeightChanges }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q14",
+            text: TITLE,
+            answer: selectedRecentWeightChanges ? [selectedRecentWeightChanges] : [],
+            options: RECENT_WEIGHT_CHANGES_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/testimonial_3";
     };
     return (
@@ -45,9 +55,9 @@ export default function RecentWeightChangesPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_recent_weight_changes">Has your weight changed in the last year?</label>
+                            <label htmlFor="form_recent_weight_changes">{TITLE}</label>
                         </div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {RECENT_WEIGHT_CHANGES_OPTIONS.map(option => (
                                 <RadioCard
                                     key={option.id}

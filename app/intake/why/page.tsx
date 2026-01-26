@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type MotivationOption = {
     id: string;
@@ -33,6 +34,14 @@ export default function WhyPage() {
             return;
         }
         localStorage.setItem("motivation", JSON.stringify({ motivation }));
+        const selectedMotivation = MOTIVATION_OPTIONS.find(option => option.value === motivation);
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q6",
+            text: "What is your primary reason for taking weight loss seriously?",
+            answer: selectedMotivation?.label ? [selectedMotivation.label] : [],
+            options: MOTIVATION_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/speed";
     };
     return (
@@ -49,7 +58,7 @@ export default function WhyPage() {
             <div className="mt-6">
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {MOTIVATION_OPTIONS.map(option => (
                                 <RadioCard
                                     key={option.id}

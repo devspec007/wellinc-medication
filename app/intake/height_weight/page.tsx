@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { updateQuestionnaire } from "@/lib/helper";
+
+const TITLE = "What is your height and weight?";
 
 export default function HeightWeightPage() {
   const [feet, setFeet] = useState<number | "">("");
@@ -24,7 +27,16 @@ export default function HeightWeightPage() {
       toast.error("Please enter a valid weight.");
       return;
     }
-    localStorage.setItem("height_weight", JSON.stringify({ feet, inches, weight }));
+    localStorage.setItem("height_weight", JSON.stringify({title: TITLE, feet, inches, weight }));
+    
+    // Update or push to Questionnaire array
+    updateQuestionnaire({
+      type: "text",
+      id: "q1",
+      text: TITLE,
+      answer: `feet: ${feet}' inches: ${inches}" weight: ${weight} lbs`,
+    });
+    
     const bmi = (weight / ((feet * 12 + inches) ** 2)) * 703;
     if (bmi < 27) {
       window.location.href = "/intake/not_qualified_bmi";
@@ -44,7 +56,7 @@ export default function HeightWeightPage() {
         weight loss.
       </div>
       <div className="title mt-4">
-        What is your height and weight?
+        {TITLE}
       </div>
       <div className="space-y-10 mt-4">
         {/* Feet */}

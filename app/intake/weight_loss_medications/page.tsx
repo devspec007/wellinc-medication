@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type WeightLossMedicationOption = {
     id: string;
@@ -15,6 +16,8 @@ const WEIGHT_LOSS_MEDICATION_OPTIONS: WeightLossMedicationOption[] = [
     { id: "form_weight_loss_medications_different_medication", value: "different_medication", label: "Yes, I've taken a differrent medication for weight loss" },
     { id: "form_weight_loss_medications_no", value: "no", label: "No" },
 ];
+
+const TITLE = "Have you taken GLP-1 medication for weight loss within the past 4 weeks?";
 
 export default function WeightLossMedicationsPage() {
     const [selectedWeightLossMedications, setSelectedWeightLossMedications] = useState<string | "">("");
@@ -32,6 +35,13 @@ export default function WeightLossMedicationsPage() {
             return;
         }
         localStorage.setItem("weight_loss_medications", JSON.stringify({ weight_loss_medications: selectedWeightLossMedications }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q12",
+            text: TITLE,
+            answer: selectedWeightLossMedications ? [selectedWeightLossMedications] : [],
+            options: WEIGHT_LOSS_MEDICATION_OPTIONS.map(option => option.label),
+        });
         if (selectedWeightLossMedications === "no") {
             window.location.href = "/intake/diet_exercise_willingness";
         } else if (selectedWeightLossMedications === "glp_1_medication") {
@@ -46,9 +56,9 @@ export default function WeightLossMedicationsPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_weight_loss_medications">Have you taken GLP-1 medication for weight loss within the past 4 weeks?</label>
+                            <label htmlFor="form_weight_loss_medications">{TITLE}</label>
                         </div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {WEIGHT_LOSS_MEDICATION_OPTIONS.map(option => (
                                 <RadioCard
                                     key={option.id}

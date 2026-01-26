@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type CurrentMedicationsOption = {
     id: string;
@@ -14,6 +15,8 @@ const CURRENT_MEDICATIONS_OPTIONS: CurrentMedicationsOption[] = [
     { id: "form_current_medications_yes", value: "yes", label: "Yes" },
     { id: "form_current_medications_no", value: "no", label: "No" },
 ];
+
+const TITLE = "Do you currently take any medications?";
 
 export default function CurrentMedicationsPage() {
     const [selectedCurrentMedications, setSelectedCurrentMedications] = useState<string | "">("");
@@ -38,6 +41,20 @@ export default function CurrentMedicationsPage() {
             toast.error("Please add some details.")
             return;
         }
+        let answer = selectedCurrentMedications ? [selectedCurrentMedications] : [];
+        // add the details to the answer if it exists
+        if(currentMedicationsDetails.length > 0) {
+            answer.push(currentMedicationsDetails);
+        }
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q18",
+            text: TITLE,
+            answer: answer,
+            options: CURRENT_MEDICATIONS_OPTIONS.map(option => option.label),
+        });
+
+        // save the data to local storage
         localStorage.setItem("current_medications", JSON.stringify({ current_medications: selectedCurrentMedications, current_medications_details: currentMedicationsDetails }));
         window.location.href = "/intake/motivated";
     };
@@ -50,7 +67,7 @@ export default function CurrentMedicationsPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_current_medications">Do you currently take any medications?</label>
+                            <label htmlFor="form_current_medications">{TITLE}</label>
                         </div>
                         <div className="w-full mt-4 space-y-2">
                             {CURRENT_MEDICATIONS_OPTIONS.map(option => (

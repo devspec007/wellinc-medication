@@ -3,6 +3,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import CheckboxCard from "@/components/CheckboxCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type DietExerciseWillingnessOption = {
     id: string;
@@ -15,6 +16,8 @@ const DIET_EXERCISE_WILLINGNESS_OPTIONS: DietExerciseWillingnessOption[] = [
     { id: "form_diet_exercise_willingness_increase_physical_activity", value: "increase_physical_activity", label: "Increase your physical activity alongside medication" },
     { id: "form_diet_exercise_willingness_none_of_the_above", value: "none_of_the_above", label: "None of the above" },
 ];
+
+const TITLE = "If clinically appropriate, are you willing to:";
 
 export default function DietExerciseWillingnessPage() {
     const [selectedDietExerciseWillingness, setSelectedDietExerciseWillingness] = useState<string[]>([]);
@@ -49,6 +52,13 @@ export default function DietExerciseWillingnessPage() {
         }
 
         localStorage.setItem("diet_exercise_willingness", JSON.stringify({ diet_exercise_willingness: selectedDietExerciseWillingness }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q13",
+            text: TITLE,
+            answer: selectedDietExerciseWillingness.map(value => DIET_EXERCISE_WILLINGNESS_OPTIONS.find(opt => opt.value === value)?.label || value),
+            options: DIET_EXERCISE_WILLINGNESS_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/recent_weight_changes";
     };
 
@@ -58,9 +68,9 @@ export default function DietExerciseWillingnessPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_diet_exercise_willingness">If clinically appropriate, are you willing to:</label>
+                            <label htmlFor="form_diet_exercise_willingness">{TITLE}</label>
                         </div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {DIET_EXERCISE_WILLINGNESS_OPTIONS.map(option => (
                                 <CheckboxCard
                                     key={option.id}

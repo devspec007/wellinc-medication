@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type SpeedOption = {
     id: string;
@@ -16,6 +17,8 @@ const SPEED_OPTIONS: SpeedOption[] = [
     { id: "form_speed_faster", value: "speed_faster", label: "I want it faster", iconSrc: "/assets/Icons/run.svg" },
     { id: "form_speed_too_fast", value: "speed_too_fast", label: "That's too fast", iconSrc: "/assets/Icons/hourglass_low.svg" },
 ];
+
+const TITLE = "How is that pace for you?";
 
 export default function SpeedPage() {
     const [speed, setSpeed] = useState<string | "">("");
@@ -43,6 +46,14 @@ export default function SpeedPage() {
             return;
         }
         localStorage.setItem("speed", JSON.stringify({ speed }));
+        const selectedSpeed = SPEED_OPTIONS.find(option => option.value === speed);
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q7",
+            text: TITLE,
+            answer: selectedSpeed?.label ? [selectedSpeed.label] : [],
+            options: SPEED_OPTIONS.map(option => option.label),
+        });
         if (speed === "speed_good") {
             window.location.href = "/intake/speed_good";
         } else if (speed === "speed_faster") {
@@ -67,7 +78,7 @@ export default function SpeedPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_speed">How is that pace for you?</label>
+                            <label htmlFor="form_speed">{TITLE}</label>
                         </div>
                         <div className="w-full mt-4 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                             {SPEED_OPTIONS.map(option => (

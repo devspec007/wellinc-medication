@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type AdditionalInformationOption = {
     id: string;
@@ -14,6 +15,8 @@ const ADDITIONAL_INFORMATION_OPTIONS: AdditionalInformationOption[] = [
     { id: "form_additional_information_yes", value: "yes", label: "Yes" },
     { id: "form_additional_information_no", value: "no", label: "No" },
 ];
+
+const TITLE = "Do you have any further information which you would like our medical team to know?";
 
 export default function AdditionalInformationPage() {
     const [selectedAdditionalInformation, setSelectedAdditionalInformation] = useState<string | "">("");
@@ -38,6 +41,17 @@ export default function AdditionalInformationPage() {
             toast.error("Please input your details.");
             return;
         }
+        let answer = selectedAdditionalInformation ? [selectedAdditionalInformation] : [];
+        if(additionalInformationDetails.length > 0) {
+            answer.push(additionalInformationDetails);
+        }
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q20",
+            text: TITLE,
+            answer: answer,
+            options: ADDITIONAL_INFORMATION_OPTIONS.map(option => option.label),
+        });
         localStorage.setItem("additional_information", JSON.stringify({ additional_information: selectedAdditionalInformation, additional_information_details: additionalInformationDetails }));
         window.location.href = "/intake/dob";
     };
@@ -54,7 +68,7 @@ export default function AdditionalInformationPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_additional_information">Do you have any further information which you would like our medical team to know?</label>
+                            <label htmlFor="form_additional_information">{TITLE}</label>
                         </div>
                         <div className="w-full mt-4 space-y-2">
                             {ADDITIONAL_INFORMATION_OPTIONS.map(option => (

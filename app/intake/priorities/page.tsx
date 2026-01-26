@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type PriorityOption = {
     id: string;
@@ -16,6 +17,8 @@ const PRIORITY_OPTIONS: PriorityOption[] = [
     { id: "form_priority_gain_muscle", value: "gain_muscle", label: "Gain Muscle", iconSrc: "/assets/Icons/muscle.svg" },
     { id: "form_priority_maintain_my_current_body", value: "maintain_my_current_body", label: "Maintain My Current Body", iconSrc: "/assets/Icons/ok.svg" },
 ];
+
+const TITLE = "Which of these is your priority?";
 
 export default function PrioritiesPage() {
     const [priority, setPriority] = useState<string | "">("");
@@ -31,6 +34,14 @@ export default function PrioritiesPage() {
             return;
         }
         localStorage.setItem("priority", JSON.stringify({ priority }));
+        const selectedPriority = PRIORITY_OPTIONS.find(option => option.value === priority);
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q5",
+            text: TITLE,
+            answer: selectedPriority?.label ? [selectedPriority.label] : [],
+            options: PRIORITY_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/magic";
     };
 
@@ -44,7 +55,7 @@ export default function PrioritiesPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_priority">Which of these is your priority?</label>
+                            <label htmlFor="form_priority">{TITLE}</label>
                         </div>
                         <div className="w-full mt-4 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                             {PRIORITY_OPTIONS.map(option => (

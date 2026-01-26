@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { InputMask } from '@react-input/mask';
 import toast from "react-hot-toast";
 
-import { InputMask } from '@react-input/mask';
 import { isValidEmail, isValidPhone } from '@/lib/helper';
-import { useRouter } from "next/navigation";
-import { signup } from '@/lib/api';
-import { sendOtp } from '@/lib/api';
+import { initSession, signup, sendOtp, getPatientBasic } from '@/lib/api';
 
 export default function ContactPage() {
     const [email, setEmail] = useState("");
@@ -61,30 +60,35 @@ export default function ContactPage() {
 
         // Call signup API
         // Get firstName and lastName from localStorage (from 'intake-medical-review')
-        let firstName = "";
-        let lastName = "";
-        try {
+        initSession().then(res => {
+            if (!res.success) return toast.error("Cannot initialize session.");
+            const correlationId = localStorage.getItem("client-correlation-id");
             const review = JSON.parse(localStorage.getItem("intake-medical-review") || "{}")
-            firstName = review.firstName || "";
-            lastName = review.lastName || "";
-        } catch {}
-        signup({ email, phone, firstName, lastName }).then(res => {
-            if (res.error) {
-                if(res.error == "Email already exists") {
-                    sendOtp({ email }).then(otpRes => {
-                        if (otpRes.error) {
-                            toast.error(otpRes.error);
-                        } else {
-                            toast.success("OTP sent successfully!");
-                            router.push("/intake/otp");
-                        }
-                    });
-                } else {
-                    toast.error(res.error);
-                }
-            } else if (res.token) {
-                localStorage.setItem("token", res.token);
-                toast.success("Sign up successful!");
+            const firstName = review.firstName || "";
+            const lastName = review.lastName || "";
+
+            if(correlationId) {
+                getPatientBasic({ email }).then(res => {
+                    if (!res.patientExists) {
+                        //Sign up
+                        signup({ email, phone, firstName, lastName }).then(res => {
+                            if (res.token) {
+                                localStorage.setItem("token", res.token);
+                                toast.success("Sign up successful!");
+                            }
+                        });
+                    } else {
+                        //Login-Send OTP
+                        sendOtp({ email }).then(otpRes => {
+                            if (otpRes.error) {
+                                toast.error(otpRes.error);
+                            } else {
+                                toast.success("OTP sent successfully!");
+                                router.push("/intake/otp");
+                            }
+                        });
+                    }
+                });
             }
         });
     };
@@ -138,16 +142,16 @@ export default function ContactPage() {
                     <div>
                         <label className="block select-none checkbox-simple">
                             <div className="flex items-center gap-3">
-                            <div >
-                                <input
-                                    required
-                                    type="checkbox"
-                                    checked={isAgreed}
-                                    onChange={e => setIsAgreed(e.target.checked)}
-                                    name="form_contact_agree"
-                                    id="form_contact_agree"
-                                />
-                            </div>
+                                <div >
+                                    <input
+                                        required
+                                        type="checkbox"
+                                        checked={isAgreed}
+                                        onChange={e => setIsAgreed(e.target.checked)}
+                                        name="form_contact_agree"
+                                        id="form_contact_agree"
+                                    />
+                                </div>
                                 <span className="text-brand-500 leading-5">I understand that my information is never shared, is protected by HIPAA and agree to the terms and privacy policies and to be contacted as necessary by Wellinc and its medical partners and can opt-out at anytime. </span>
                             </div>
                         </label>

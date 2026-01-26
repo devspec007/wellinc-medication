@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type MotivatedOption = {
     id: string;
@@ -17,6 +18,8 @@ const MOTIVATED_OPTIONS: MotivatedOption[] = [
     { id: "form_motivated_cautious", value: "cautious", label: "I'm cautious", iconSrc: "/assets/Icons/unamused.svg" },
 ];
 
+const TITLE = "How motivated are you to reach your weight goal?";
+
 export default function MotivatedPage() {
     const [motivated, setMotivated] = useState<string | "">("");
 
@@ -30,6 +33,14 @@ export default function MotivatedPage() {
             toast.error("Please select your answer.");
             return;
         }
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q19",
+            text: TITLE,
+            answer: motivated ? [motivated] : [],
+            options: MOTIVATED_OPTIONS.map(option => option.label),
+        });
+        
         localStorage.setItem("motivated", JSON.stringify({ motivated }));
         window.location.href = "/intake/additional_information";
     };
@@ -44,7 +55,7 @@ export default function MotivatedPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_motivated">How motivated are you to reach your weight goal?</label>
+                            <label htmlFor="form_motivated">{TITLE}</label>
                         </div>
                         <div className="w-full mt-4 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                             {MOTIVATED_OPTIONS.map(option => (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type RestingHeartRateOption = {
     id: string;
@@ -17,6 +18,8 @@ const RESTING_HEART_RATE_OPTIONS: RestingHeartRateOption[] = [
     { id: "form_resting_heart_rate_fast", value: "fast", label: ">110 beats per minute (Fast)" },
     { id: "form_resting_heart_rate_not_sure", value: "not_sure", label: "I'm not sure" },
 ];
+
+const TITLE = "How about your average resting heart rate?";
 
 export default function RestingHeartRatePage() {
     const [selectedRestingHeartRate, setSelectedRestingHeartRate] = useState<string | "">("");
@@ -34,6 +37,13 @@ export default function RestingHeartRatePage() {
             return;
         }
         localStorage.setItem("resting_heart_rate", JSON.stringify({ resting_heart_rate: selectedRestingHeartRate }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q16",
+            text: TITLE,
+            answer: selectedRestingHeartRate ? [selectedRestingHeartRate] : [],
+            options: RESTING_HEART_RATE_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/medication_match";
     };
     return (
@@ -45,9 +55,9 @@ export default function RestingHeartRatePage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_resting_heart_rate">How about your average resting heart rate?</label>
+                            <label htmlFor="form_resting_heart_rate">{TITLE}</label>
                         </div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {RESTING_HEART_RATE_OPTIONS.map(option => (
                                 <RadioCard
                                     key={option.id}

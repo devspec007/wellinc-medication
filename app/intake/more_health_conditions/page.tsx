@@ -3,6 +3,7 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import toast from "react-hot-toast";
 import CheckboxCard from "@/components/CheckboxCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type MoreHealthConditionOption = {
     id: string;
@@ -21,6 +22,8 @@ const MORE_HEALTH_CONDITION_OPTIONS: MoreHealthConditionOption[] = [
     { id: "form_more_health_conditions_history_of_kidney_failure", value: "history_of_kidney_failure", label: "History of kidney failure" },
     { id: "form_more_health_conditions_history_of_gi_disorders", value: "history_of_gi_disorders", label: "You have a history of GI disorders such as inflammatory bowel disease" },
 ];
+
+const TITLE = "Do any of these apply to you?";
 
 export default function MoreHealthConditionsPage() {
     const [selectedMoreHealthConditions, setSelectedMoreHealthConditions] = useState<string[]>([]);
@@ -55,6 +58,13 @@ export default function MoreHealthConditionsPage() {
         }
 
         localStorage.setItem("more_health_conditions", JSON.stringify({ more_health_conditions: selectedMoreHealthConditions }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q11",
+            text: TITLE,
+            answer: selectedMoreHealthConditions.map(value => MORE_HEALTH_CONDITION_OPTIONS.find(opt => opt.value === value)?.label || value),
+            options: MORE_HEALTH_CONDITION_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/weight_loss_medications";
     };
 
@@ -67,9 +77,9 @@ export default function MoreHealthConditionsPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_more_health_conditions">Do any of these apply to you?</label>
+                            <label htmlFor="form_more_health_conditions">{TITLE}</label>
                         </div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {MORE_HEALTH_CONDITION_OPTIONS.map(option => (
                                 <CheckboxCard
                                     key={option.id}

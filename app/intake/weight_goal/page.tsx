@@ -1,7 +1,10 @@
 "use client";
 
+import { updateQuestionnaire } from "@/lib/helper";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+
+const TITLE = "What is your goal weight (lbs)?";
 
 export default function WeightGoalPage() {
   const [weightGoal, setWeightGoal] = useState<number | "">("");
@@ -31,6 +34,12 @@ export default function WeightGoalPage() {
       return;
     }
     localStorage.setItem("weight_goal", JSON.stringify({ weightGoal }));
+    updateQuestionnaire({
+      type: "text",
+      id: "q2",
+      text: TITLE,
+      answer: weightGoal.toString(),
+    });
     window.location.href = "/intake/gender_age";
   };
 
@@ -45,7 +54,7 @@ export default function WeightGoalPage() {
         <span className="title-accent"> Your goal is our goal.</span>
       </div>
       <div className="title-sm mt-6">
-        What is your goal weight (lbs)?
+        {TITLE}
       </div>
 
       <div className="mt-4">

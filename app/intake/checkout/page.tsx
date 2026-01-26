@@ -11,6 +11,7 @@ import { Country, State } from "country-state-city";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { getPlanColors } from "@/lib/helper";
+import { BaskPayment, PaymentElementOptions } from "@baskhealth/payment-element";
 
 function CheckoutForm() {
   const stripe = useStripe();
@@ -61,6 +62,32 @@ const COUNTRIES = Country.getAllCountries().sort((a, b) =>
   a.name.localeCompare(b.name)
 );
 
+const publicKey = "pk_test_1234567890";
+const baskPayment = new BaskPayment();
+async function loadPaymentElementIntoDom(publicKey: string) {
+  console.log("Loading Bask payment element into DOM");
+    await baskPayment.loadPaymentElement(publicKey);
+      const elements = baskPayment.elements({
+      locale: "en",
+      clientSecret: "your_client_secret_here",
+    });
+
+    const paymentElementOptions: PaymentElementOptions = {
+      layout: {
+          type: "accordion",
+          defaultCollapsed: true,
+          radios: true,
+          spacedAccordionItems: true,
+          maxAccordionItems: 3,
+      },
+    };
+
+    const element = elements.create("payment", paymentElementOptions);
+
+    element.mount("#payment-container");
+}
+
+loadPaymentElementIntoDom(publicKey);
 
 export default function CheckoutPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -424,6 +451,10 @@ export default function CheckoutPage() {
           <CheckoutForm />
         </Elements>
       )}
+
+      {/* Bask Payment Element */}
+      <div id="payment-container"></div>
+
       <div className="mt-6 text-sm text-brand-200 text-center">
         🛡️ 256-bit SSL encryption • PCI DSS compliant
       </div>

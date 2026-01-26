@@ -3,6 +3,7 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import toast from "react-hot-toast";
 import CheckboxCard from "@/components/CheckboxCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type EffectOption = {
     id: string;
@@ -18,6 +19,8 @@ const EFFECT_OPTIONS: EffectOption[] = [
     { id: "form_effects_cognition_issues", value: "cognition_issues", label: "Cognition Issues", iconSrc: "/assets/Icons/brain.svg" },
     { id: "form_effects_none_of_these", value: "none_of_these", label: "None of These", iconSrc: "/assets/Icons/none.svg" },
 ];
+
+const TITLE = "Do you experience any of the following?";
 
 export default function UniqueEffectsPage() {
     const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
@@ -58,6 +61,17 @@ export default function UniqueEffectsPage() {
         }
 
         localStorage.setItem("unique_effects", JSON.stringify({ effects: selectedEffects }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q4",
+            text: TITLE,
+            answer: selectedEffects.map(value => {
+                const option = EFFECT_OPTIONS.find(opt => opt.value === value);
+                return option ? option.label : value;
+            }),
+            options: EFFECT_OPTIONS.map(option => option.label),
+        });
+        
         if (gender === "male") {
             window.location.href = "/intake/priorities";
         } else {
@@ -76,7 +90,7 @@ export default function UniqueEffectsPage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_effects">Do you experience any of the following?</label>
+                            <label htmlFor="form_effects">{TITLE}</label>
                         </div>
                         <div className="w-full mt-4 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                             {EFFECT_OPTIONS.map(option => (

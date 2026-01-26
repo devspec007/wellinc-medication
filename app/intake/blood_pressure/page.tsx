@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type BloodPressureOption = {
     id: string;
@@ -17,6 +18,8 @@ const BLOOD_PRESSURE_OPTIONS: BloodPressureOption[] = [
     { id: "form_blood_pressure_high_stage_2", value: "high_stage_2", label: "≥140/90 (High Stage 2)" },
     { id: "form_blood_pressure_not_sure", value: "not_sure", label: "I'm not sure" },
 ];
+
+const TITLE = "What is your average blood pressure range?";
 
 export default function BloodPressurePage() {
     const [selectedBloodPressure, setSelectedBloodPressure] = useState<string | "">("");
@@ -34,6 +37,13 @@ export default function BloodPressurePage() {
             return;
         }
         localStorage.setItem("blood_pressure", JSON.stringify({ blood_pressure: selectedBloodPressure }));
+        updateQuestionnaire({
+            type: "multiple-choice",
+            id: "q15",
+            text: TITLE,
+            answer: selectedBloodPressure ? [selectedBloodPressure] : [],
+            options: BLOOD_PRESSURE_OPTIONS.map(option => option.label),
+        });
         window.location.href = "/intake/resting_heart_rate";
     };
     return (
@@ -45,9 +55,9 @@ export default function BloodPressurePage() {
                 <fieldset className="space-y-6 md:space-y-8">
                     <div>
                         <div className="label mb-1">
-                            <label htmlFor="form_blood_pressure">What is your average blood pressure range?</label>
+                            <label htmlFor="form_blood_pressure">{TITLE}</label>
                         </div>
-                        <div className="w-full mt-4 w-full space-y-2">
+                        <div className="w-full mt-4 space-y-2">
                             {BLOOD_PRESSURE_OPTIONS.map(option => (
                                 <RadioCard
                                     key={option.id}

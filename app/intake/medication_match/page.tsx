@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
+import { updateQuestionnaire } from "@/lib/helper";
 
 type MedicationMatchOption = {
   id: string;
@@ -28,6 +29,8 @@ const DRUG_OPTIONS: DrugOption[] = [
   { id: "form_drug_option_drops", value: "drops", label: "I prefer drops", iconSrc: "/assets/Icons/drops.svg" },
 ];
 
+const TITLE = "Which of these is most important to you?";
+
 export default function MedicationMatchPage() {
   const [medicationMatch, setMedicationMatch] = useState<string | "">("");
   const [drugOption, setDrugOption] = useState<string | "">("");
@@ -48,6 +51,13 @@ export default function MedicationMatchPage() {
     //   return;
     // }
     localStorage.setItem("medication_match", JSON.stringify({ medication_match: medicationMatch, drug_option: drugOption }));
+    updateQuestionnaire({
+      type: "multiple-choice",
+      id: "q17",
+      text: TITLE,
+      answer: medicationMatch ? [medicationMatch] : [],
+      options: MEDICATION_MATCH_OPTIONS.map(option => option.label),
+    });
     window.location.href = "/intake/current_medications";
   };
 
@@ -62,7 +72,7 @@ export default function MedicationMatchPage() {
         <fieldset className="space-y-6 md:space-y-8">
           <div>
             <div className="label mb-1">
-              <label htmlFor="form_medication_match">Which of these is most important to you?</label>
+              <label htmlFor="form_medication_match">{TITLE}</label>
             </div>
             <div className="w-full mt-4 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               {MEDICATION_MATCH_OPTIONS.map(option => (

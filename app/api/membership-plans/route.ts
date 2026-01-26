@@ -11,12 +11,19 @@ export async function GET(req: Request) {
     if (!token) {
       return NextResponse.json({ error: 'No token provided.' }, { status: 401 });
     }
+    
+    const correlationId = req.headers.get('x-client-correlation-id');
+    if (!correlationId) {
+      return NextResponse.json({ error: 'Correlation ID is required.' }, { status: 400 });
+    }
+    
     const res = await fetch(`${BASE_URL}/membership-plans`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
-        'x-api-key': SECRET_API_KEY
+        'x-api-key': SECRET_API_KEY,
+        'x-client-correlation-id': correlationId,
       }
     });
     const data = await res.json();

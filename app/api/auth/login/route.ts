@@ -6,12 +6,18 @@ const SECRET_API_KEY = process.env.SECRET_API_KEY!;
 
 export async function POST(req: Request) {
   try {
-    const { email, otp } = await req.json();
+    const { email, otp, correlationId } = await req.json();
+    
+    if (!correlationId) {
+      return NextResponse.json({ error: 'Correlation ID is required.' }, { status: 400 });
+    }
+    
     const res = await fetch(`${BASE_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": SECRET_API_KEY,
+        "x-client-correlation-id": correlationId,
       },
       body: JSON.stringify({ email, otp })
     });

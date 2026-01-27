@@ -1,138 +1,510 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { useEffect, useState, useMemo, useRef } from "react";
+import { BaskPayment, PaymentElementOptions } from "@baskhealth/payment-element";
+import { toast } from "react-hot-toast";
 import { Country, State } from "country-state-city";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+
 import { getPlanColors } from "@/lib/helper";
-import { BaskPayment, PaymentElementOptions } from "@baskhealth/payment-element";
+import { getNewToken, getPatientData, initiateCheckout, updatePatient } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
-function CheckoutForm() {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    if (!stripe || !elements) return;
-
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + "/intake/checkout/success",
-      },
-      redirect: "if_required",
-    });
-
-    if (error) {
-      setError(error.message || "Payment failed.");
-    } else if (paymentIntent?.status === "succeeded") {
-      window.location.href = "/intake/checkout/success";
-    }
-    setLoading(false);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="mt-4">
-      <PaymentElement />
-      {error && <div className="text-red-600 font-semibold">{error}</div>}
-      <button
-        type="submit"
-        disabled={loading || !stripe || !elements}
-        className="bg-[#4f01ff] text-white w-full py-3 mt-4 cursor-pointer rounded hover:bg-brand-500"
-      >
-        {loading ? "Processing payment..." : "Pay"}
-      </button>
-    </form>
-  );
-}
 
 // Get all countries and sort alphabetically
-const COUNTRIES = Country.getAllCountries().sort((a, b) => 
+const COUNTRIES = Country.getAllCountries().sort((a, b) =>
   a.name.localeCompare(b.name)
 );
 
-const publicKey = "pk_test_1234567890";
-const baskPayment = new BaskPayment();
-async function loadPaymentElementIntoDom(publicKey: string) {
-  console.log("Loading Bask payment element into DOM");
-    await baskPayment.loadPaymentElement(publicKey);
-      const elements = baskPayment.elements({
-      locale: "en",
-      clientSecret: "your_client_secret_here",
-    });
-
-    const paymentElementOptions: PaymentElementOptions = {
-      layout: {
-          type: "accordion",
-          defaultCollapsed: true,
-          radios: true,
-          spacedAccordionItems: true,
-          maxAccordionItems: 3,
-      },
-    };
-
-    const element = elements.create("payment", paymentElementOptions);
-
-    element.mount("#payment-container");
-}
-
-loadPaymentElementIntoDom(publicKey);
-
 export default function CheckoutPage() {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const baskPaymentRef = useRef<BaskPayment | null>(null);
+  const baskElementsRef = useRef<any>(null);
+  const clientSecretRef = useRef<string | null>(null);
+
+  // Initialize BaskPayment instance once
+  if (baskPaymentRef.current === null) {
+    baskPaymentRef.current = new BaskPayment();
+  }
   const [country, setCountry] = useState("US");
-  const [addressLine1, setAddressLine1] = useState("");
-  const [addressLine2, setAddressLine2] = useState("");
+  const [addressLine, setAddressLine] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const pendingStateRef = useRef<string | null>(null);
+  const [errors, setErrors] = useState<{
+    addressLine?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  }>({});
+  const [isAddressSubmitted, setIsAddressSubmitted] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/create-payment-intent", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 2000 }), // $20.00 in cents
-    })
-      .then((res) => res.json())
-      .then((data) => setClientSecret(data.clientSecret));
-  }, []);
-
+  const router = useRouter();
   useEffect(() => {
     const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
     setSelectedProduct(selectedProduct);
     console.log("Selected Product:", selectedProduct);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("No auth token found.");
+      router.push("/intake/medication_review");
+      return;
+    }
+
+    getPatientData(token).then((data: any) => {
+      if (!data?.error) {
+        setPatientData(data?.patient);
+        return;
+      }
+
+      if (data?.error == 401) {
+        getNewToken(token).then((newTokenData: any) => {
+          if (newTokenData?.newToken) {
+            localStorage.setItem("token", newTokenData?.newToken);
+            getPatientData(newTokenData?.newToken).then((data: any) => {
+              setPatientData(data?.patient);
+              return;
+            });
+          } else {
+            toast.error("Failed to refresh token.");
+            return;
+          }
+        });
+      } else {
+        toast.error("No patient data found.");
+        return;
+      }
+    });
   }, []);
 
-  // Reset state when country changes
+  // Reset state when country changes (unless we have a pending state from patient data)
   useEffect(() => {
-    setState("");
+    if (pendingStateRef.current) {
+      setState(pendingStateRef.current);
+      pendingStateRef.current = null;
+    } else {
+      setState("");
+      setIsAddressSubmitted(false);
+    }
   }, [country]);
+
+  // Validate address when all fields are populated (e.g., from patient data on load)
+  useEffect(() => {
+    // Only validate if all required fields have values (indicating data was loaded)
+    if (addressLine && city && state && zipCode) {
+      // Use a small delay to ensure state updates have completed
+      const timer = setTimeout(() => {
+        if (validateShippingAddress()) {
+          setIsAddressSubmitted(true);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [addressLine, city, state, zipCode, country]);
+
+  const setPatientData = async (data: any) => {
+    setAddressLine(data?.address?.street);
+    setCity(data?.address?.city);
+
+    // Convert state name to ISO code if needed
+    const stateValue = data?.address?.state;
+    let stateIsoCode = stateValue;
+
+    if (stateValue) {
+      const countryCode = data?.address?.country || country;
+      if (countryCode) {
+        const states = State.getStatesOfCountry(countryCode);
+        // Check if stateValue is already an ISO code
+        const stateByCode = states.find((s: any) => s.isoCode === stateValue);
+        if (stateByCode) {
+          stateIsoCode = stateValue;
+        } else {
+          // Try to find by name
+          const stateByName = states.find((s: any) =>
+            s.name.toLowerCase() === stateValue.toLowerCase()
+          );
+          if (stateByName) {
+            stateIsoCode = stateByName.isoCode;
+          }
+        }
+      }
+    }
+
+    // Set country first if available (this will trigger the useEffect that resets state)
+    if (data?.address?.country) {
+      // Store the state value to set after country change
+      pendingStateRef.current = stateIsoCode;
+      setCountry(data?.address?.country);
+    } else {
+      // If no country change, set state directly
+      setState(stateIsoCode || "");
+    }
+
+    setZipCode(data?.address?.zipCode);
+
+    // Use the actual values from data instead of state (which hasn't updated yet)
+    const finalCountry = data?.address?.country || country;
+    
+    // Check if address is valid - if patient data has all required fields, enable the button
+    const hasValidAddress = 
+      data?.address?.street && 
+      data?.address?.city && 
+      stateIsoCode && 
+      data?.address?.zipCode;
+    
+    if (hasValidAddress) {
+      // Validate the address to ensure it's truly valid
+      const isValid = validateShippingAddress(
+        data?.address?.street,
+        data?.address?.city,
+        stateIsoCode,
+        data?.address?.zipCode,
+        finalCountry
+      );
+      
+      if (isValid) {
+        setIsAddressSubmitted(true);
+      }
+    }
+    
+    const checkoutData = await getCheckoutData(
+      data?.address?.street,
+      data?.address?.city,
+      stateIsoCode,
+      data?.address?.zipCode,
+      finalCountry
+    );
+
+    if (checkoutData) {
+      loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
+      return;
+    }
+  };
 
   const getStatesForCountry = () => {
     if (!country) return [];
-    return State.getStatesOfCountry(country).sort((a, b) => 
+    return State.getStatesOfCountry(country).sort((a, b) =>
       a.name.localeCompare(b.name)
     );
   };
 
-  const stripePromise = useMemo(
-    () => loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""),
-    []
-  );
-  const options = clientSecret ? { clientSecret } : undefined;
+  async function getCheckoutData(
+    addressValue?: string,
+    cityValue?: string,
+    stateValue?: string,
+    zipCodeValue?: string,
+    countryValue?: string
+  ) {
+    if (!validateShippingAddress(addressValue, cityValue, stateValue, zipCodeValue, countryValue)) {
+      toast.error("Please fill in the shipping address form.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("No auth token found.");
+      router.push("/intake/medication_review");
+      return;
+    }
+
+    const product = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
+    let initiateCheckoutData = await initiateCheckout(token, {
+      productGroupId: product?.productGroupId,
+      membershipPlanId: product?.membershipPlanId,
+      membershipPlanVariantId: product?.membershipPlanVariantId,
+    });
+
+    if (initiateCheckoutData?.error == 401) {
+      const newTokenData = await getNewToken(token);
+      if (newTokenData?.newToken) {
+        localStorage.setItem("token", newTokenData?.newToken);
+        initiateCheckoutData = await initiateCheckout(newTokenData?.newToken, {
+          productGroupId: product?.productGroupId,
+          membershipPlanId: product?.membershipPlanId,
+          membershipPlanVariantId: product?.membershipPlanVariantId,
+        });
+        if (!initiateCheckoutData?.error) {
+          return initiateCheckoutData.data;
+        }
+        if (initiateCheckoutData?.error == 409) {
+          toast.success("Payment already in progress. Please wait for the payment to complete.");
+          localStorage.clear();
+          router.push("/");
+          return null;
+        }
+        toast.error("Failed to initiate checkout.");
+        return null;
+      } else {
+        toast.error("Failed to refresh token.");
+        return null;
+      }
+    }
+
+    if(!initiateCheckoutData?.error) {
+      return initiateCheckoutData.data;
+    }
+    
+    if (initiateCheckoutData?.error == 409) {
+      toast.success("Payment already in progress. Please wait for the payment to complete.");
+      localStorage.clear();
+      router.push("/");
+      return null;
+    }
+
+    toast.error("Failed to initiate checkout.");
+    return null;
+  }
+
+  const validateShippingAddress = (
+    addressValue?: string,
+    cityValue?: string,
+    stateValue?: string,
+    zipCodeValue?: string,
+    countryValue?: string
+  ) => {
+    // Use provided values or fall back to state
+    const addrLine = addressValue !== undefined ? addressValue : addressLine;
+    const cityVal = cityValue !== undefined ? cityValue : city;
+    const stateVal = stateValue !== undefined ? stateValue : state;
+    const zipVal = zipCodeValue !== undefined ? zipCodeValue : zipCode;
+    const countryVal = countryValue !== undefined ? countryValue : country;
+
+    const newErrors: {
+      addressLine?: string;
+      city?: string;
+      state?: string;
+      zipCode?: string;
+    } = {};
+
+    // Validate address line
+    if (!addrLine || addrLine.trim() === "") {
+      newErrors.addressLine = "Address line is required.";
+    }
+
+    // Validate city
+    if (!cityVal || cityVal.trim() === "") {
+      newErrors.city = "City is required.";
+    }
+
+    // Validate state
+    if (!stateVal || stateVal.trim() === "") {
+      newErrors.state = "State is required.";
+    } else if (countryVal) {
+      const states = State.getStatesOfCountry(countryVal);
+      if (states.length > 0) {
+        // If states are available, validate that the selected state exists
+        const validState = states.find((s) => s.isoCode === stateVal);
+        if (!validState) {
+          newErrors.state = "Please select a valid state.";
+        }
+      }
+    }
+
+    // Validate ZIP code
+    if (!zipVal || zipVal.trim() === "") {
+      newErrors.zipCode = "ZIP code is required.";
+    } else {
+      // Basic ZIP code validation (5 digits or 5+4 format)
+      const zipRegex = /^\d{5}(-\d{4})?$/;
+      if (!zipRegex.test(zipVal.trim())) {
+        newErrors.zipCode = "Please enter a valid ZIP code (e.g., 12345 or 12345-6789).";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmitShippingAddress = async () => {
+    if (validateShippingAddress()) {
+      // Get checkout data and load payment element
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("No auth token found.");
+        router.push("/intake/medication_review");
+        return;
+      }
+
+      let updatePatientData = await updatePatient(token, {
+        city,
+        address: addressLine,
+        state,
+        zipCode,
+        country: country,
+        phoneNumber: phoneNumber,
+      });
+
+      if (!updatePatientData?.error) {
+        toast.success("Patient data updated successfully!");
+        setIsAddressSubmitted(true);
+        const checkoutData = await getCheckoutData();
+        if(checkoutData){
+          loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
+          return;
+        } else {
+          toast.error("Failed to initialize checkout.");
+          return;
+        }
+      }
+
+      if (updatePatientData?.error == 401) {
+        let newTokenData = await getNewToken(token);
+        if (newTokenData?.newToken) {
+          localStorage.setItem("token", newTokenData?.newToken);
+          updatePatientData = await updatePatient(newTokenData?.newToken, {
+            city,
+            address: addressLine,
+            state,
+            zipCode,
+            country: country,
+            phoneNumber: phoneNumber,
+          });
+
+          if (!updatePatientData?.error) {
+            toast.success("Patient data updated successfully!");
+            const checkoutData = await getCheckoutData();
+            // if(checkoutData){
+            //   loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
+            //   return;
+            // } else {
+            //   toast.error("Failed to initialize checkout.");
+            //   return;
+            // }
+          } else {
+            toast.error("Failed to update information.");
+            return;
+          }
+        } else {
+          toast.error("Failed to refresh token.");
+          return;
+        }
+      } else {
+        toast.error("Failed to update information.");
+        return;
+      }
+    } else {
+      toast.error("Please fill out the information in the form.");
+      return;
+    }
+  };
+
+  async function loadPaymentElementIntoDom(publicKey: string, clientSecret: string) {
+    if (!publicKey || !clientSecret) {
+      toast.error("No public key or client secret found.");
+      return;
+    }
+
+    if (!baskPaymentRef.current) {
+      toast.error("Payment system not initialized.");
+      return;
+    }
+
+    await baskPaymentRef.current.loadPaymentElement(publicKey);
+    clientSecretRef.current = clientSecret; // Store for later use
+    baskElementsRef.current = baskPaymentRef.current.elements({
+      locale: "en",
+      clientSecret: clientSecret,
+    });
+
+    const paymentElementOptions: PaymentElementOptions = {
+      layout: {
+        type: "accordion",
+        defaultCollapsed: true,
+        radios: true,
+        spacedAccordionItems: true,
+        maxAccordionItems: 3,
+      },
+    };
+
+    const element = baskElementsRef.current.create("payment", paymentElementOptions);
+    baskElementsRef.current.getElement("payment");
+    console.log("Bask Elements:", baskElementsRef.current);
+    element.mount("#payment-container");
+  }
+
+  const confirmPayment = async () => {
+    if (baskElementsRef.current == null) {
+      toast.error("No payment elements found. Please submit your shipping address first.");
+      return;
+    }
+
+    const baskElement = baskElementsRef.current.getElement("payment");
+    console.log("Bask Element:", baskElement);
+    if (baskElement == null) {
+      toast.error("No payment element found.");
+      return;
+    }
+
+    if (!baskPaymentRef.current) {
+      toast.error("Payment system not initialized.");
+      return;
+    }
+
+    // Check payment status first if we have a client secret
+    if (clientSecretRef.current) {
+      try {
+        const paymentIntent = await baskPaymentRef.current.retrievePaymentIntent(clientSecretRef.current);
+        console.log("Payment Status:", paymentIntent.status);
+
+        // If payment is already authorized (requires_capture) or succeeded, redirect to success
+        if (paymentIntent.status === "requires_capture" || paymentIntent.status === "succeeded") {
+          toast.success("Payment authorized successfully!");
+          router.push("/intake/checkout/success");
+          return;
+        }
+
+        // If payment is already processing, show message
+        if (paymentIntent.status === "processing") {
+          toast.success("Payment is processing...");
+          return;
+        }
+      } catch (error: any) {
+        console.log("Could not retrieve payment intent, proceeding with confirmation:", error);
+      }
+    }
+
+    try {
+      const result = await baskPaymentRef.current.confirmPayment({
+        elements: baskElementsRef.current,
+        confirmParams: {
+          return_url: `${window.location.origin}/intake/checkout/success`,
+        },
+      });
+      console.log("Payment Result:", result);
+
+      // Handle the result - check if it has an error property
+      if (result && typeof result === 'object' && 'error' in result) {
+        const errorResult = result as { error: { type?: string; message?: string; code?: string } };
+        const errorMessage = errorResult.error.message || errorResult.error.code || "Payment failed.";
+        if ((errorResult.error.type === "invalid_request" || errorResult.error.code === "invalid_request") &&
+          errorMessage.includes("requires_capture")) {
+          // Payment was already authorized, this is actually a success
+          toast.success("Payment authorized successfully!");
+          router.push("/intake/checkout/success");
+        } else {
+          toast.error(errorMessage);
+        }
+      } else if (result && 'status' in result) {
+        // Handle PaymentConfirmResponse
+        const paymentResult = result as { status: string };
+        if (paymentResult.status === "succeeded" || paymentResult.status === "requires_capture") {
+          toast.success("Payment authorized successfully!");
+          router.push("/intake/checkout/success");
+        } else if (paymentResult.status === "failed") {
+          toast.error("Payment failed.");
+        } else {
+          toast.success("Payment processing...");
+        }
+      }
+
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast.error(error.message || "Payment failed.");
+    }
+  };
 
   return (
     <div className="md:mt-6 mx-auto max-w-3xl">
@@ -283,6 +655,9 @@ export default function CheckoutPage() {
           </svg>
           Your privacy guaranteed
         </div>
+        <div className="text-sm text-[#7D8FA0] text-center mt-2">
+          Please submit valid shipping address to proceed with payment
+        </div>
         <div className="space-y-4">
           {/* Country or region */}
           <div>
@@ -311,38 +686,31 @@ export default function CheckoutPage() {
           {/* Address line 1 */}
           <div>
             <label
-              htmlFor="addressLine1"
+              htmlFor="addressLine"
               className="block text-sm font-medium text-brand-700 mb-1"
             >
-              Address line 1
+              Address line
             </label>
             <input
               type="text"
-              id="addressLine1"
-              name="addressLine1"
-              value={addressLine1}
-              onChange={(e) => setAddressLine1(e.target.value)}
-              className="block w-full rounded border border-brand-200 bg-white px-4 py-2.5 text-brand-800 outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300"
+              id="addressLine"
+              name="addressLine"
+              value={addressLine}
+              onChange={(e) => {
+                setAddressLine(e.target.value);
+                setIsAddressSubmitted(false);
+                if (errors.addressLine) {
+                  setErrors({ ...errors, addressLine: undefined });
+                }
+              }}
+              className={`block w-full rounded border bg-white px-4 py-2.5 text-brand-800 outline-none focus:ring-1 ${errors.addressLine
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "border-brand-200 focus:border-brand-300 focus:ring-brand-300"
+                }`}
             />
-          </div>
-
-          {/* Address line 2 */}
-          <div>
-            <label
-              htmlFor="addressLine2"
-              className="block text-sm font-medium text-brand-700 mb-1"
-            >
-              Address line 2
-            </label>
-            <input
-              type="text"
-              id="addressLine2"
-              name="addressLine2"
-              value={addressLine2}
-              onChange={(e) => setAddressLine2(e.target.value)}
-              placeholder="Apt., suite, unit number, etc. (optional)"
-              className="block w-full rounded border border-brand-200 bg-white px-4 py-2.5 text-brand-800 placeholder:text-brand-400 outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300"
-            />
+            {errors.addressLine && (
+              <p className="mt-1 text-sm text-red-600">{errors.addressLine}</p>
+            )}
           </div>
 
           {/* City */}
@@ -358,9 +726,21 @@ export default function CheckoutPage() {
               id="city"
               name="city"
               value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="block w-full rounded border border-brand-200 bg-white px-4 py-2.5 text-brand-800 outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300"
+              onChange={(e) => {
+                setCity(e.target.value);
+                setIsAddressSubmitted(false);
+                if (errors.city) {
+                  setErrors({ ...errors, city: undefined });
+                }
+              }}
+              className={`block w-full rounded border bg-white px-4 py-2.5 text-brand-800 outline-none focus:ring-1 ${errors.city
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "border-brand-200 focus:border-brand-300 focus:ring-brand-300"
+                }`}
             />
+            {errors.city && (
+              <p className="mt-1 text-sm text-red-600">{errors.city}</p>
+            )}
           </div>
 
           {/* State and ZIP code in a row */}
@@ -378,8 +758,17 @@ export default function CheckoutPage() {
                   id="state"
                   name="state"
                   value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="block w-full rounded border border-brand-200 bg-white px-4 py-2.5 text-brand-800 outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300"
+                  onChange={(e) => {
+                    setState(e.target.value);
+                    setIsAddressSubmitted(false);
+                    if (errors.state) {
+                      setErrors({ ...errors, state: undefined });
+                    }
+                  }}
+                  className={`block w-full rounded border bg-white px-4 py-2.5 text-brand-800 outline-none focus:ring-1 ${errors.state
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-brand-200 focus:border-brand-300 focus:ring-brand-300"
+                    }`}
                 >
                   <option value="">Select state</option>
                   {getStatesForCountry().map((s) => (
@@ -394,9 +783,21 @@ export default function CheckoutPage() {
                   id="state"
                   name="state"
                   value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="block w-full rounded border border-brand-200 bg-white px-4 py-2.5 text-brand-800 outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300"
+                  onChange={(e) => {
+                    setState(e.target.value);
+                    setIsAddressSubmitted(false);
+                    if (errors.state) {
+                      setErrors({ ...errors, state: undefined });
+                    }
+                  }}
+                  className={`block w-full rounded border bg-white px-4 py-2.5 text-brand-800 outline-none focus:ring-1 ${errors.state
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                    : "border-brand-200 focus:border-brand-300 focus:ring-brand-300"
+                    }`}
                 />
+              )}
+              {errors.state && (
+                <p className="mt-1 text-sm text-red-600">{errors.state}</p>
               )}
             </div>
 
@@ -413,9 +814,21 @@ export default function CheckoutPage() {
                 id="zipCode"
                 name="zipCode"
                 value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                className="block w-full rounded border border-brand-200 bg-white px-4 py-2.5 text-brand-800 outline-none focus:border-brand-300 focus:ring-1 focus:ring-brand-300"
+                onChange={(e) => {
+                  setZipCode(e.target.value);
+                  setIsAddressSubmitted(false);
+                  if (errors.zipCode) {
+                    setErrors({ ...errors, zipCode: undefined });
+                  }
+                }}
+                className={`block w-full rounded border bg-white px-4 py-2.5 text-brand-800 outline-none focus:ring-1 ${errors.zipCode
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  : "border-brand-200 focus:border-brand-300 focus:ring-brand-300"
+                  }`}
               />
+              {errors.zipCode && (
+                <p className="mt-1 text-sm text-red-600">{errors.zipCode}</p>
+              )}
             </div>
           </div>
 
@@ -441,19 +854,40 @@ export default function CheckoutPage() {
               buttonClass="phone-input-button"
             />
           </div>
+
+          {/* Submit Shipping Address Button */}
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleSubmitShippingAddress}
+              className="w-full cursor-pointer bg-brand-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-brand-600 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
+            >
+              Submit Shipping Address
+            </button>
+          </div>
         </div>
       </div>
       <div className="text-2xl mt-4 leading-8 font-semibold text-brand-300 text-center">
         Enter Your Card Details
       </div>
-      {clientSecret && (
-        <Elements stripe={stripePromise} options={options}>
-          <CheckoutForm />
-        </Elements>
-      )}
-
       {/* Bask Payment Element */}
       <div id="payment-container"></div>
+
+      <div className="mt-6">
+        <button
+          type="button"
+          onClick={confirmPayment}
+          disabled={!isAddressSubmitted}
+          title={!isAddressSubmitted ? "Please submit valid shipping address first" : ""}
+          className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 ${
+            !isAddressSubmitted
+              ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+              : "bg-brand-500 text-white cursor-pointer hover:bg-brand-600"
+          }`}
+        >
+          Confirm Payment
+        </button>
+      </div>
 
       <div className="mt-6 text-sm text-brand-200 text-center">
         🛡️ 256-bit SSL encryption • PCI DSS compliant

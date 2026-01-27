@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { getMembershipPlans } from "@/lib/api";
+import { answerQuestions, getMembershipPlans, getNewToken } from "@/lib/api";
 import toast from "react-hot-toast";
 
 import { getPlanColors } from "@/lib/helper";
+import { useRouter } from "next/navigation";
 
 export default function TreatmentsPage() {
   const [plans, setPlans] = useState<any>(null);
@@ -13,8 +14,9 @@ export default function TreatmentsPage() {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const selectPlanRef = useRef<HTMLDivElement | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(600); // 10 minutes in seconds
-  const fetchPlansRef = useRef<boolean>(false);
+  const submitQuestionsRef = useRef<boolean>(false);
 
+  const router = useRouter();
   const handleSelect = (keyString: "Semaglutide" | "Tirzepatide") => {
     const plan = plans?.find((p: any) =>
       p.name?.toLowerCase().includes(keyString.toLowerCase())
@@ -44,14 +46,26 @@ export default function TreatmentsPage() {
   };
 
   const handleSelectVariant = (variantId: string) => {
-    const imgSrc = selectedPlan?.name.toLowerCase().includes("semaglutide") ? "/assets/imgs/Semaglutide.jpg" : "/assets/imgs/Tirzepatide.jpg";
+    let productGroupId = null;
+    let imgSrc = null;
+    if(selectedPlan?.name.toLowerCase().includes("semaglutide")) {
+      productGroupId = 3;
+      imgSrc = "/assets/imgs/Semaglutide.jpg";
+    } else {
+      productGroupId = 7;
+      imgSrc = "/assets/imgs/Tirzepatide.jpg";
+    }
+    
     const selectedProduct = {
       medication: selectedPlan?.name,
       deliveryPlan: selectedVariant.find((v: any) => v.id === variantId)?.name,
       totalSavings: selectedVariant.find((v: any) => v.id === variantId)?.savingPrice,
       monthlyPrice: selectedVariant.find((v: any) => v.id === variantId)?.price,
       totalPrice: selectedPlan?.variants.find((v: any) => v.id === variantId)?.price,
-      imgSrc
+      imgSrc,
+      productGroupId,
+      membershipPlanId: selectedPlan?.id,
+      membershipPlanVariantId: variantId,
     }
     localStorage.setItem("selectedProduct", JSON.stringify(selectedProduct));
     window.location.href = "/intake/checkout";
@@ -101,24 +115,87 @@ export default function TreatmentsPage() {
   };
 
   useEffect(() => {
-    // Prevent duplicate API calls (e.g., from React Strict Mode)
-    if (fetchPlansRef.current) return;
-    fetchPlansRef.current = true;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("No auth token found.");
+      router.push("/intake/medication_review");
+      return;
+    }
 
-    const fetchPlans = async () => {
+    getMembershipPlans(token).then(res => {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        toast.error("No auth token found.");
+      if (!res?.error) {
+        setPlans(res?.plans);
         setLoading(false);
+        return
+      }
+
+      if (res?.error == 401) {
+        getNewToken(token).then(res => {
+          if (res?.newToken) {
+            localStorage.setItem("token", res?.newToken);
+            getMembershipPlans(res?.newToken).then(res => {
+              if (res?.plans) {
+                setPlans(res?.plans);
+                setLoading(false);
+              } else {
+                toast.error("Failed to fetch plans.");
+                setLoading(false);
+                return;
+              }
+            });
+          }
+        });
+      }
+
+      toast.error("Failed to fetch plans.");
+      return;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("isQuestionSubmitted") == "true") return;
+    if (submitQuestionsRef.current) return;
+    submitQuestionsRef.current = true;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("No auth token found.");
+      router.push("/intake/medication_review");
+      return;
+    }
+
+    const questions = JSON.parse(localStorage.getItem("Questionnaire") || "[]");
+    if (questions.length == 0) {
+      toast.error("No questionnires found.");
+      return;
+    }
+
+    answerQuestions(token, questions).then(res => {
+      if (res.success) {
+        toast.success("Your questionnaires have been submitted successfully.");
+        localStorage.setItem("isQuestionSubmitted", "true");
         return;
       }
-      const { plans, error } = await getMembershipPlans(token);
-      if (error) toast.error(error);
-      setPlans(plans.membershipPlans || null);
-      setLoading(false);
-    };
-    fetchPlans();
+
+      if (res?.error == 401) {
+        getNewToken(token).then(res => {
+          if (res?.newToken) {
+            localStorage.setItem("token", res?.newToken);
+            answerQuestions(res?.newToken, questions).then(res => {
+              if (res?.success) {
+                toast.success("Your questionnaires have been submitted successfully.");
+                localStorage.setItem("isQuestionSubmitted", "true");
+                return;
+              }
+            });
+          }
+        });
+      }
+
+      toast.error("Failed to submit questions.");
+      return;
+    });
   }, []);
 
   useEffect(() => {
@@ -200,11 +277,10 @@ export default function TreatmentsPage() {
         <div className="mt-4">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div
-              className={`relative p-4 bg-white rounded cursor-pointer hover:bg-grey-200 ${
-                selectedPlan?.name.includes("Semaglutide")
+              className={`relative p-4 bg-white rounded cursor-pointer hover:bg-grey-200 ${selectedPlan?.name.includes("Semaglutide")
                   ? "ring-2 ring-[#1F3E5B]"
                   : "ring ring-brand-75"
-              }`}
+                }`}
               onClick={() => handleSelect("Semaglutide")}
             >
               <div className="flex gap-4">
@@ -254,9 +330,8 @@ export default function TreatmentsPage() {
               </div>
 
               <div
-                className={`absolute right-2.5 top-3 bg-white rounded-full ${
-                  selectedPlan?.name.includes("Semaglutide") ? "" : "hidden"
-                }`}
+                className={`absolute right-2.5 top-3 bg-white rounded-full ${selectedPlan?.name.includes("Semaglutide") ? "" : "hidden"
+                  }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -274,9 +349,8 @@ export default function TreatmentsPage() {
               </div>
 
               <div
-                className={`absolute right-4 top-4 bg-white ${
-                  selectedPlan?.name.includes("Semaglutide") ? "hidden" : ""
-                }`}
+                className={`absolute right-4 top-4 bg-white ${selectedPlan?.name.includes("Semaglutide") ? "hidden" : ""
+                  }`}
               >
                 <div className="h-6 w-6 rounded-full ring-2 ring-brand-75"></div>
               </div>
@@ -287,11 +361,10 @@ export default function TreatmentsPage() {
         <div className="mt-4">
           <div className="flex flex-col gap-3 sm:gap-4">
             <div
-              className={`relative p-4 bg-white rounded cursor-pointer hover:bg-grey-200 ${
-                selectedPlan?.name.includes("Tirzepatide")
+              className={`relative p-4 bg-white rounded cursor-pointer hover:bg-grey-200 ${selectedPlan?.name.includes("Tirzepatide")
                   ? "ring-2 ring-[#1F3E5B]"
                   : "ring ring-brand-75"
-              }`}
+                }`}
               onClick={() => handleSelect("Tirzepatide")}
             >
               <div className="flex gap-4">
@@ -339,9 +412,8 @@ export default function TreatmentsPage() {
               </div>
 
               <div
-                className={`absolute right-2.5 top-3 bg-white rounded-full ${
-                  selectedPlan?.name.includes("Tirzepatide") ? "" : "hidden"
-                }`}
+                className={`absolute right-2.5 top-3 bg-white rounded-full ${selectedPlan?.name.includes("Tirzepatide") ? "" : "hidden"
+                  }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -359,9 +431,8 @@ export default function TreatmentsPage() {
               </div>
 
               <div
-                className={`absolute right-4 top-4 bg-white ${
-                  selectedPlan?.name.includes("Tirzepatide") ? "hidden" : ""
-                }`}
+                className={`absolute right-4 top-4 bg-white ${selectedPlan?.name.includes("Tirzepatide") ? "hidden" : ""
+                  }`}
                 aria-hidden="true"
               >
                 <div className="h-6 w-6 rounded-full ring-2 ring-brand-75"></div>
@@ -397,9 +468,9 @@ export default function TreatmentsPage() {
                 style={
                   variant.isPopular
                     ? ({
-                        "--tw-ring-color": "#2ed296",
-                        backgroundColor: "#f0fcf8",
-                      } as React.CSSProperties)
+                      "--tw-ring-color": "#2ed296",
+                      backgroundColor: "#f0fcf8",
+                    } as React.CSSProperties)
                     : {}
                 }
                 onClick={() => handleSelectVariant(variant.id)}

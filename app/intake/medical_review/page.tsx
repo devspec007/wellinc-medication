@@ -47,11 +47,6 @@ export default function MedicalReviewPage() {
 
   // Save data to localStorage
   const handleNext = () => {
-    console.log("Saving data to localStorage:", {
-      firstName,
-      lastName,
-      shippingState,
-    });
     const dataToSave = {
       firstName,
       lastName,

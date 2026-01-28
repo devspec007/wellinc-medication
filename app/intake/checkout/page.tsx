@@ -46,7 +46,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
     setSelectedProduct(selectedProduct);
-    console.log("Selected Product:", selectedProduct);
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("No auth token found.");
@@ -419,7 +418,6 @@ export default function CheckoutPage() {
 
     const element = baskElementsRef.current.create("payment", paymentElementOptions);
     baskElementsRef.current.getElement("payment");
-    console.log("Bask Elements:", baskElementsRef.current);
     element.mount("#payment-container");
   }
 
@@ -430,7 +428,6 @@ export default function CheckoutPage() {
     }
 
     const baskElement = baskElementsRef.current.getElement("payment");
-    console.log("Bask Element:", baskElement);
     if (baskElement == null) {
       toast.error("No payment element found.");
       return;
@@ -445,7 +442,6 @@ export default function CheckoutPage() {
     if (clientSecretRef.current) {
       try {
         const paymentIntent = await baskPaymentRef.current.retrievePaymentIntent(clientSecretRef.current);
-        console.log("Payment Status:", paymentIntent.status);
 
         // If payment is already authorized (requires_capture) or succeeded, redirect to success
         if (paymentIntent.status === "requires_capture" || paymentIntent.status === "succeeded") {
@@ -471,8 +467,6 @@ export default function CheckoutPage() {
           return_url: `${window.location.origin}/intake/checkout/success`,
         },
       });
-      console.log("Payment Result:", result);
-
       // Handle the result - check if it has an error property
       if (result && typeof result === 'object' && 'error' in result) {
         const errorResult = result as { error: { type?: string; message?: string; code?: string } };

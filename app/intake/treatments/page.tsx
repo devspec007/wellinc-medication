@@ -173,7 +173,6 @@ export default function TreatmentsPage() {
 
     answerQuestions(token, questions).then(res => {
       if (res.success) {
-        toast.success("Your questionnaires have been submitted successfully.");
         localStorage.setItem("isQuestionSubmitted", "true");
         return;
       }
@@ -184,7 +183,6 @@ export default function TreatmentsPage() {
             localStorage.setItem("token", res?.newToken);
             answerQuestions(res?.newToken, questions).then(res => {
               if (res?.success) {
-                toast.success("Your questionnaires have been submitted successfully.");
                 localStorage.setItem("isQuestionSubmitted", "true");
                 return;
               }

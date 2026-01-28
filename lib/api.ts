@@ -23,21 +23,22 @@ export interface SignupParams {
 }
 
 // Helper function to get or generate correlation ID
-function getCorrelationId(): string {
+function getCorrelationId(isRecreated: boolean = false): string {
   const STORAGE_KEY = "client-correlation-id";
   
   let correlationId = localStorage.getItem(STORAGE_KEY);
-  if (!correlationId) {
+  if (!correlationId || isRecreated) {
     // Generate UUID v4
     correlationId = crypto.randomUUID();
     localStorage.setItem(STORAGE_KEY, correlationId);
   }
+
   return correlationId;
 }
 
 export async function initSession(body?: any): Promise<{ success?: boolean; error?: string }> {
   try {
-    const correlationId = getCorrelationId();
+    const correlationId = getCorrelationId(true);
     
     const res = await fetch("/api/session-init", {
       method: "POST",
@@ -121,7 +122,6 @@ export async function getPatientBasic({ email }: { email: string }): Promise<{ p
     });
     
     const data = await res.json();
-    console.log("client data: ", data);
     if (!res.ok) {
       return { error: data.error || "Failed to check patient." };
     }

@@ -1,16 +1,17 @@
 // This layout is for the "Checkout" step of the intake flow.
 
-import type { Metadata } from "next";
+"use client";
+
+import { usePathname } from "next/navigation";
 import CheckoutLayout from "@/components/CheckoutLayout";
 
-export const metadata: Metadata = {
-  title: "Checkout | Wellinc",
-  description: "Review and complete your order for Wellinc.",
-};
-
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  // Hide back button on success page, show on checkout page
+  const isShowBackButton = pathname !== "/intake/checkout/success";
+  
   return (
-    <CheckoutLayout isShowBackButton={true} className="shadow-sm">
+    <CheckoutLayout isShowBackButton={isShowBackButton} className="shadow-sm">
       {children}
     </CheckoutLayout>
   );

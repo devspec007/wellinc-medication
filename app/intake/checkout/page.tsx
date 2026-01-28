@@ -230,9 +230,8 @@ export default function CheckoutPage() {
           return initiateCheckoutData.data;
         }
         if (initiateCheckoutData?.error == 409) {
-          toast.success("Payment already in progress. Please wait for the payment to complete.");
           localStorage.clear();
-          router.push("/");
+          router.push("/intake/checkout/success");
           return null;
         }
         toast.error("Failed to initiate checkout.");
@@ -248,9 +247,8 @@ export default function CheckoutPage() {
     }
     
     if (initiateCheckoutData?.error == 409) {
-      toast.success("Payment already in progress. Please wait for the payment to complete.");
       localStorage.clear();
-      router.push("/");
+      router.push("/intake/checkout/success");
       return null;
     }
 

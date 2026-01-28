@@ -116,7 +116,7 @@ export async function getPatientBasic({ email }: { email: string }): Promise<{ p
   try {
     const correlationId = getCorrelationId();
     const params = new URLSearchParams({ email, correlationId });
-    const res = await fetch(`/api/basic?${params.toString()}`, {
+    const res = await fetch(`/api/patients/basic?${params.toString()}`, {
       method: "GET",
     });
     

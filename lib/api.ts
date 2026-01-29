@@ -191,7 +191,7 @@ export async function getMembershipPlans(token: string): Promise<{ plans?: any; 
   }
 }
 
-export async function getNewToken(token: string): Promise<{ newToken?: string; error?: string }> {
+export async function getNewToken(token: string): Promise<{ newToken?: string; status?: any }> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/auth/refresh-token", {
@@ -199,16 +199,89 @@ export async function getNewToken(token: string): Promise<{ newToken?: string; e
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, correlationId })
     });
-    const data = await res.json();
 
-    if(res.status == 401 || data?.error?.code == "UNAUTHORIZED") {
-      return { error: "UNAUTHORIZED" };
-    } else {
-      return { newToken: data?.newToken };
-    }
+    const data = await res.json();
+    return { newToken: data?.newToken, status: res.status };
   } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { status: 500 };
   }
+}
+
+// --- Token Refresh Wrapper ---
+/**
+ * Wrapper function that automatically handles token refresh on 401 errors.
+ * 
+ * @param apiCall - The API function to call (must accept token as first parameter)
+ * @param token - The current authentication token
+ * @param args - Additional arguments to pass to the API function (after token)
+ * @param options - Optional configuration for error handling
+ * @returns The result from the API call, or null if error handling redirects
+ * 
+ * @example
+ * const result = await withTokenRefresh(
+ *   getPatientData,
+ *   token,
+ *   [],
+ *   { on404: () => router.push("/intake/contact") }
+ * );
+ */
+export async function withTokenRefresh<T extends (...args: any[]) => Promise<any>>(
+  apiCall: T,
+  token: string,
+  args: Parameters<T> extends [string, ...infer Rest] ? Rest : never[] = [] as any,
+  options?: {
+    on404?: () => void | Promise<void>;
+    onError?: (error: any) => void | Promise<void>;
+    getToken?: () => string | null;
+    setToken?: (newToken: string) => void;
+  }
+): Promise<ReturnType<T> | null> {
+  const getToken = options?.getToken || (() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("token");
+    }
+    return null;
+  });
+  
+  const setToken = options?.setToken || ((newToken: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("token", newToken);
+    }
+  });
+
+  // First attempt with current token
+  const result = await apiCall(token, ...args) as Awaited<ReturnType<T>>;
+
+  // Check if we got a 401 error
+  if (result && typeof result === 'object' && 'error' in result && result.error === 401) {
+    // Try to refresh the token
+    const newTokenDataRes = await getNewToken(token);
+    
+    if (newTokenDataRes?.newToken) {
+      // Update token in storage
+      setToken(newTokenDataRes.newToken);
+      
+      // Retry the API call with new token
+      const retryResult = await apiCall(newTokenDataRes.newToken, ...args) as Awaited<ReturnType<T>>;
+      return retryResult;
+    }
+
+    // Handle 404 from token refresh (token not found/invalid)
+    if (newTokenDataRes?.status === 404) {
+      if (options?.on404) {
+        await options.on404();
+      }
+      return null;
+    }
+
+    // Handle other token refresh errors
+    if (options?.onError) {
+      await options.onError(newTokenDataRes);
+    }
+    return null;
+  }
+
+  return result;
 }
 
 export async function initiateCheckout(token: string, body: any): Promise<{ data?: any, error?: any }> {

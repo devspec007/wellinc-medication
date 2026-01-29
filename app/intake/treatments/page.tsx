@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { answerQuestions, getMembershipPlans, getNewToken } from "@/lib/api";
+import { answerQuestions, getMembershipPlans, withTokenRefresh } from "@/lib/api";
 import toast from "react-hot-toast";
 
 import { getPlanColors } from "@/lib/helper";
@@ -122,35 +122,27 @@ export default function TreatmentsPage() {
       return;
     }
 
-    getMembershipPlans(token).then(res => {
+    (async () => {
       setLoading(true);
-      if (!res?.error) {
-        setPlans(res?.plans);
+      const res = await withTokenRefresh(
+        getMembershipPlans,
+        token,
+        [],
+        { on404: () => router.push("/intake/contact") }
+      );
+
+      if (res && !res?.error && res?.plans) {
+        setPlans(res.plans);
         setLoading(false);
-        return
+        return;
       }
 
-      if (res?.error == 401) {
-        getNewToken(token).then(res => {
-          if (res?.newToken) {
-            localStorage.setItem("token", res?.newToken);
-            getMembershipPlans(res?.newToken).then(res => {
-              if (res?.plans) {
-                setPlans(res?.plans);
-                setLoading(false);
-              } else {
-                toast.error("Failed to fetch plans.");
-                setLoading(false);
-                return;
-              }
-            });
-          }
-        });
+      setLoading(false);
+      if (!res) {
+        return; // Error already handled by wrapper
       }
-
-      toast.error("Failed to fetch plans.");
-      return;
-    });
+      router.push("/intake/contact");
+    })();
   }, []);
 
   useEffect(() => {
@@ -171,29 +163,25 @@ export default function TreatmentsPage() {
       return;
     }
 
-    answerQuestions(token, questions).then(res => {
-      if (res.success) {
+    (async () => {
+      const res = await withTokenRefresh(
+        answerQuestions,
+        token,
+        [questions],
+        { on404: () => router.push("/intake/contact") }
+      );
+
+      if (res && res.success) {
         localStorage.setItem("isQuestionSubmitted", "true");
         return;
       }
 
-      if (res?.error == 401) {
-        getNewToken(token).then(res => {
-          if (res?.newToken) {
-            localStorage.setItem("token", res?.newToken);
-            answerQuestions(res?.newToken, questions).then(res => {
-              if (res?.success) {
-                localStorage.setItem("isQuestionSubmitted", "true");
-                return;
-              }
-            });
-          }
-        });
+      if (!res) {
+        return; // Error already handled by wrapper
       }
 
-      toast.error("Failed to submit questions.");
-      return;
-    });
+      router.push("/intake/contact");
+    })();
   }, []);
 
   useEffect(() => {

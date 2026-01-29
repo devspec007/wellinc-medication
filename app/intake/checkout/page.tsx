@@ -7,7 +7,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
 import { getPlanColors } from "@/lib/helper";
-import { getNewToken, getPatientData, initiateCheckout, updatePatient } from "@/lib/api";
+import { withTokenRefresh, getPatientData, initiateCheckout, updatePatient } from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 
@@ -46,37 +46,33 @@ export default function CheckoutPage() {
   useEffect(() => {
     const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
     setSelectedProduct(selectedProduct);
+
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("No auth token found.");
-      router.push("/intake/medication_review");
+      router.push("/intake/contact");
       return;
     }
 
-    getPatientData(token).then((data: any) => {
-      if (!data?.error) {
+    (async () => {
+      const data = await withTokenRefresh(
+        getPatientData,
+        token,
+        [],
+        { on404: () => router.push("/intake/contact") }
+      );
+
+      if (data && !data?.error) {
         setPatientData(data?.patient);
         return;
       }
 
-      if (data?.error == 401) {
-        getNewToken(token).then((newTokenData: any) => {
-          if (newTokenData?.newToken) {
-            localStorage.setItem("token", newTokenData?.newToken);
-            getPatientData(newTokenData?.newToken).then((data: any) => {
-              setPatientData(data?.patient);
-              return;
-            });
-          } else {
-            toast.error("Failed to refresh token.");
-            return;
-          }
-        });
-      } else {
-        toast.error("No patient data found.");
-        return;
+      if (!data) {
+        return; // Error already handled by wrapper
       }
-    });
+
+      router.push("/intake/contact");
+    })();
   }, []);
 
   // Reset state when country changes (unless we have a pending state from patient data)
@@ -205,53 +201,42 @@ export default function CheckoutPage() {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("No auth token found.");
-      router.push("/intake/medication_review");
+      router.push("/intake/contact");
       return;
     }
 
     const product = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
-    let initiateCheckoutData = await initiateCheckout(token, {
-      productGroupId: product?.productGroupId,
-      membershipPlanId: product?.membershipPlanId,
-      membershipPlanVariantId: product?.membershipPlanVariantId,
-    });
+    const initiateCheckoutData = await withTokenRefresh(
+      initiateCheckout,
+      token,
+      [{
+        productGroupId: product?.productGroupId,
+        membershipPlanId: product?.membershipPlanId,
+        membershipPlanVariantId: product?.membershipPlanVariantId,
+      }],
+      { on404: () => router.push("/intake/contact") }
+    );
 
-    if (initiateCheckoutData?.error == 401) {
-      const newTokenData = await getNewToken(token);
-      if (newTokenData?.newToken) {
-        localStorage.setItem("token", newTokenData?.newToken);
-        initiateCheckoutData = await initiateCheckout(newTokenData?.newToken, {
-          productGroupId: product?.productGroupId,
-          membershipPlanId: product?.membershipPlanId,
-          membershipPlanVariantId: product?.membershipPlanVariantId,
-        });
-        if (!initiateCheckoutData?.error) {
-          return initiateCheckoutData.data;
-        }
-        if (initiateCheckoutData?.error == 409) {
-          localStorage.clear();
-          router.push("/intake/checkout/success");
-          return null;
-        }
-        toast.error("Failed to initiate checkout.");
-        return null;
-      } else {
-        toast.error("Failed to refresh token.");
-        return null;
-      }
+    if (!initiateCheckoutData) {
+      return null; // Error already handled by wrapper
     }
 
-    if(!initiateCheckoutData?.error) {
+    if (!initiateCheckoutData?.error) {
       return initiateCheckoutData.data;
     }
-    
+
     if (initiateCheckoutData?.error == 409) {
       localStorage.clear();
       router.push("/intake/checkout/success");
       return null;
     }
 
-    toast.error("Failed to initiate checkout.");
+    if(initiateCheckoutData?.error == 500) {
+      toast.error("Server error. Please try again later.");
+      return null;
+    }
+
+    router.push("/intake/contact");
     return null;
   }
 
@@ -321,18 +306,27 @@ export default function CheckoutPage() {
       const token = localStorage.getItem("token");
       if (!token) {
         toast.error("No auth token found.");
-        router.push("/intake/medication_review");
+        router.push("/intake/contact");
         return;
       }
 
-      let updatePatientData = await updatePatient(token, {
-        city,
-        address: addressLine,
-        state,
-        zipCode,
-        country: country,
-        phoneNumber: phoneNumber,
-      });
+      const updatePatientData = await withTokenRefresh(
+        updatePatient,
+        token,
+        [{
+          city,
+          address: addressLine,
+          state,
+          zipCode,
+          country: country,
+          phoneNumber: phoneNumber,
+        }],
+        { on404: () => router.push("/intake/contact") }
+      );
+
+      if (!updatePatientData) {
+        return; // Error already handled by wrapper
+      }
 
       if (!updatePatientData?.error) {
         toast.success("Patient data updated successfully!");
@@ -347,41 +341,8 @@ export default function CheckoutPage() {
         }
       }
 
-      if (updatePatientData?.error == 401) {
-        let newTokenData = await getNewToken(token);
-        if (newTokenData?.newToken) {
-          localStorage.setItem("token", newTokenData?.newToken);
-          updatePatientData = await updatePatient(newTokenData?.newToken, {
-            city,
-            address: addressLine,
-            state,
-            zipCode,
-            country: country,
-            phoneNumber: phoneNumber,
-          });
-
-          if (!updatePatientData?.error) {
-            toast.success("Patient data updated successfully!");
-            const checkoutData = await getCheckoutData();
-            // if(checkoutData){
-            //   loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
-            //   return;
-            // } else {
-            //   toast.error("Failed to initialize checkout.");
-            //   return;
-            // }
-          } else {
-            toast.error("Failed to update information.");
-            return;
-          }
-        } else {
-          toast.error("Failed to refresh token.");
-          return;
-        }
-      } else {
-        toast.error("Failed to update information.");
-        return;
-      }
+      router.push("/intake/contact");
+      return;
     } else {
       toast.error("Please fill out the information in the form.");
       return;
@@ -446,6 +407,7 @@ export default function CheckoutPage() {
         // If payment is already authorized (requires_capture) or succeeded, redirect to success
         if (paymentIntent.status === "requires_capture" || paymentIntent.status === "succeeded") {
           toast.success("Payment authorized successfully!");
+          localStorage.clear();
           router.push("/intake/checkout/success");
           return;
         }
@@ -475,6 +437,7 @@ export default function CheckoutPage() {
           errorMessage.includes("requires_capture")) {
           // Payment was already authorized, this is actually a success
           toast.success("Payment authorized successfully!");
+          localStorage.clear()
           router.push("/intake/checkout/success");
         } else {
           toast.error(errorMessage);
@@ -484,6 +447,7 @@ export default function CheckoutPage() {
         const paymentResult = result as { status: string };
         if (paymentResult.status === "succeeded" || paymentResult.status === "requires_capture") {
           toast.success("Payment authorized successfully!");
+          localStorage.clear()
           router.push("/intake/checkout/success");
         } else if (paymentResult.status === "failed") {
           toast.error("Payment failed.");

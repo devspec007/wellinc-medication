@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { answerQuestions, getMembershipPlans, withTokenRefresh } from "@/lib/api";
+import { answerQuestions, getMembershipPlans, updatePatient, withTokenRefresh } from "@/lib/api";
 import toast from "react-hot-toast";
 
-import { getPlanColors } from "@/lib/helper";
+import { getPlanColors, isValidPhone } from "@/lib/helper";
 import { useRouter } from "next/navigation";
 
 export default function TreatmentsPage() {
@@ -113,6 +113,51 @@ export default function TreatmentsPage() {
         return price;
     }
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("No auth token found.");
+      router.push("/intake/medication_review");
+      return;
+    }
+    const review = JSON.parse(localStorage.getItem("intake-medical-review") || "{}")
+    const firstName = review.firstName || "";
+    const lastName = review.lastName || "";
+    const gender = JSON.parse(localStorage.getItem("gender") || "{}").gender || "";
+    const contactData = JSON.parse(localStorage.getItem("contact") || "{}");
+    const phoneRaw = contactData.phone || "";
+    // Extract only digits from phone number
+    const phoneDigits = phoneRaw.replace(/\D/g, '');
+    // Validate phone number and only include if valid
+    const isValidPhoneNumber = isValidPhone(phoneRaw);
+    const dob = JSON.parse(localStorage.getItem("dob") || "{}");
+    const dateOfBirth = `${dob.dobMonth}/${dob.dobDay}/${dob.dobYear}`;
+    (async () => {
+      const patientData: any = {
+        firstName,
+        lastName,
+        sexAtBirth: gender,
+        dateOfBirth: dateOfBirth,
+      };
+      
+      // Only add phoneNumber if it's valid
+      if (isValidPhoneNumber && phoneDigits) {
+        patientData.phoneNumber = phoneDigits;
+      }
+      
+      const res = await withTokenRefresh(
+        updatePatient,
+        token,
+        [patientData],
+        { on404: () => router.push("/intake/medication_review"),
+          onError: (error: any) => {
+            console.log(error);
+          }
+        }
+      );
+    })();
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("token");

@@ -3,7 +3,10 @@ export function isValidEmail(email: string): boolean {
 }
 
 export function isValidPhone(phone: string): boolean {
-  return /^\(\d{3}\) \d{3}-\d{4}$/.test(phone);
+  // Remove all non-digit characters and check if exactly 10 digits
+  // First digit must be 2-9 (US NANP format)
+  const digitsOnly = phone.replace(/\D/g, '');
+  return /^[2-9]\d{9}$/.test(digitsOnly);
 }
 
 export function getPlanColors(planKey: string) {

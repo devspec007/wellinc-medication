@@ -1,43 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Patient Weight Loss Medication App
 
-## Tech Stack
+A comprehensive web application that enables patients to submit health questionnaires and subscribe to personalized weight loss medication plans. This platform provides a streamlined intake process, medical assessment, and subscription management for weight loss treatments.
 
-- **Next.js 16** - React framework with App Router
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **TypeScript** - Type-safe JavaScript
-- **ESLint** - Code linting
+## Overview
+
+This application facilitates the patient journey from initial health assessment through treatment plan selection and subscription. Patients can complete a detailed questionnaire covering their health history, current medications, lifestyle factors, and weight loss goals. Based on their responses, the system matches them with appropriate weight loss medication plans and enables subscription management.
+
+## Features
+
+- **Patient Intake Questionnaire**: Comprehensive multi-step health assessment covering:
+  - Personal information and demographics
+  - Health conditions and medical history
+  - Current medications
+  - Blood pressure and vital signs
+  - Diet and exercise willingness
+  - Weight loss goals and priorities
+  - Sleep patterns and lifestyle factors
+
+- **Treatment Plan Selection**: 
+  - Access to FDA-approved weight loss medications (Semaglutide, Tirzepatide)
+  - Multiple subscription plans with flexible payment schedules
+  - Detailed medication information and dosage guidance
+
+- **Authentication System**:
+  - User registration and login
+  - OTP (One-Time Password) verification
+  - Secure session management with token refresh
+
+- **Payment Integration**:
+  - Stripe payment processing
+  - Secure checkout flow
+  - Multiple payment schedule options (Monthly, Quarterly, etc.)
+
+- **Medical Review Process**:
+  - Automated qualification assessment
+  - BMI-based eligibility checks
+  - Medical review workflow
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js (v18 or higher recommended)
+- npm or yarn package manager
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Patient Intake Flow
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application guides patients through a comprehensive intake process:
+1. Personal information collection
+2. Health history and conditions
+3. Current medications review
+4. Vital signs and health metrics
+5. Lifestyle and dietary preferences
+6. Weight loss goals and motivation
+7. Treatment plan selection
+8. Checkout and subscription
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Treatment Plans
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Patients can choose from various weight loss medication plans with different:
+- Medication types (Semaglutide, Tirzepatide)
+- Dosage options
+- Payment schedules (Monthly, Quarterly, etc.)
+- Supply durations

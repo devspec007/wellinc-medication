@@ -6,11 +6,9 @@ import { Country, State } from "country-state-city";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
-import { getPlanColors } from "@/lib/helper";
+import { getPlanColors, isValidPhone } from "@/lib/helper";
 import { withTokenRefresh, getPatientData, initiateCheckout, updatePatient } from "@/lib/api";
 import { useRouter } from "next/navigation";
-
-
 
 // Get all countries and sort alphabetically
 const COUNTRIES = Country.getAllCountries().sort((a, b) =>
@@ -21,6 +19,7 @@ export default function CheckoutPage() {
   const baskPaymentRef = useRef<BaskPayment | null>(null);
   const baskElementsRef = useRef<any>(null);
   const clientSecretRef = useRef<string | null>(null);
+  const paymentContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Initialize BaskPayment instance once
   if (baskPaymentRef.current === null) {
@@ -39,8 +38,13 @@ export default function CheckoutPage() {
     city?: string;
     state?: string;
     zipCode?: string;
+    phoneNumber?: string;
   }>({});
   const [isAddressSubmitted, setIsAddressSubmitted] = useState(false);
+  const [isLoadingPatientData, setIsLoadingPatientData] = useState(true);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [isLoadingPaymentElement, setIsLoadingPaymentElement] = useState(false);
+  const [isPaymentElementLoaded, setIsPaymentElementLoaded] = useState(false);
 
   const router = useRouter();
   useEffect(() => {
@@ -55,6 +59,7 @@ export default function CheckoutPage() {
     }
 
     (async () => {
+      setIsLoadingPatientData(true);
       const data = await withTokenRefresh(
         getPatientData,
         token,
@@ -64,13 +69,20 @@ export default function CheckoutPage() {
 
       if (data && !data?.error) {
         setPatientData(data?.patient);
+        // Add a delay to ensure all state updates from setPatientData are complete
+        // This prevents validation from running before fields are populated
+        setTimeout(() => {
+          setIsLoadingPatientData(false);
+        }, 300);
         return;
       }
 
       if (!data) {
+        setIsLoadingPatientData(false);
         return; // Error already handled by wrapper
       }
 
+      setIsLoadingPatientData(false);
       router.push("/intake/contact");
     })();
   }, []);
@@ -78,18 +90,19 @@ export default function CheckoutPage() {
   // Reset state when country changes (unless we have a pending state from patient data)
   useEffect(() => {
     if (pendingStateRef.current) {
-      setState(pendingStateRef.current);
+      setState(pendingStateRef.current || "");
       pendingStateRef.current = null;
     } else {
       setState("");
       setIsAddressSubmitted(false);
+      resetPaymentElementState();
     }
   }, [country]);
 
   // Validate address when all fields are populated (e.g., from patient data on load)
   useEffect(() => {
-    // Only validate if all required fields have values (indicating data was loaded)
-    if (addressLine && city && state && zipCode) {
+    // Only validate if patient data has finished loading and all required fields have values
+    if (!isLoadingPatientData && addressLine && city && state && zipCode && phoneNumber) {
       // Use a small delay to ensure state updates have completed
       const timer = setTimeout(() => {
         if (validateShippingAddress()) {
@@ -98,11 +111,28 @@ export default function CheckoutPage() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [addressLine, city, state, zipCode, country]);
+  }, [addressLine, city, state, zipCode, country, phoneNumber, isLoadingPatientData]);
+
+  // Cleanup payment element on unmount
+  useEffect(() => {
+    return () => {
+      // Clean up payment element when component unmounts
+      if (baskElementsRef.current) {
+        try {
+          const paymentElement = baskElementsRef.current.getElement("payment");
+          if (paymentElement && typeof paymentElement.unmount === 'function') {
+            paymentElement.unmount();
+          }
+        } catch (e) {
+          // Ignore errors during cleanup
+        }
+      }
+    };
+  }, []);
 
   const setPatientData = async (data: any) => {
-    setAddressLine(data?.address?.street);
-    setCity(data?.address?.city);
+    setAddressLine(data?.address?.street || "");
+    setCity(data?.address?.city || "");
 
     // Convert state name to ISO code if needed
     const stateValue = data?.address?.state;
@@ -131,24 +161,50 @@ export default function CheckoutPage() {
     // Set country first if available (this will trigger the useEffect that resets state)
     if (data?.address?.country) {
       // Store the state value to set after country change
-      pendingStateRef.current = stateIsoCode;
+      pendingStateRef.current = stateIsoCode || "";
       setCountry(data?.address?.country);
     } else {
       // If no country change, set state directly
       setState(stateIsoCode || "");
     }
 
-    setZipCode(data?.address?.zipCode);
+    setZipCode(data?.address?.zipCode || "");
+
+    // Set phone number if available
+    if (data?.phoneNumber) {
+      // If phone number is already in digits format, format it for PhoneInput
+      // PhoneInput expects format like "11234567890" (with country code)
+      const phoneDigits = data.phoneNumber.replace(/\D/g, '');
+      if (phoneDigits.length === 10) {
+        // If it's 10 digits, prepend "1" for US country code
+        setPhoneNumber(`1${phoneDigits}`);
+      } else if (phoneDigits.length === 11 && phoneDigits.startsWith('1')) {
+        // If it's 11 digits starting with 1, use as is
+        setPhoneNumber(phoneDigits);
+      } else {
+        setPhoneNumber("");
+      }
+    } else {
+      setPhoneNumber("");
+    }
 
     // Use the actual values from data instead of state (which hasn't updated yet)
     const finalCountry = data?.address?.country || country;
     
     // Check if address is valid - if patient data has all required fields, enable the button
+    const phoneDigits = data?.phoneNumber ? data.phoneNumber.replace(/\D/g, '') : '';
+    const phoneWithoutCountry = phoneDigits.length === 11 && phoneDigits.startsWith('1') 
+      ? phoneDigits.substring(1) 
+      : phoneDigits;
+    const formattedPhone = phoneDigits.length === 10 ? `1${phoneDigits}` : (phoneDigits.length === 11 && phoneDigits.startsWith('1') ? phoneDigits : '');
+
     const hasValidAddress = 
       data?.address?.street && 
       data?.address?.city && 
       stateIsoCode && 
-      data?.address?.zipCode;
+      data?.address?.zipCode &&
+      data?.phoneNumber &&
+      isValidPhone(phoneWithoutCountry);
     
     if (hasValidAddress) {
       // Validate the address to ensure it's truly valid
@@ -157,26 +213,48 @@ export default function CheckoutPage() {
         data?.address?.city,
         stateIsoCode,
         data?.address?.zipCode,
-        finalCountry
+        finalCountry,
+        formattedPhone
       );
       
       if (isValid) {
         setIsAddressSubmitted(true);
+        // Automatically call initiate-checkout when all information is valid
+        const checkoutData = await getCheckoutData(
+          data?.address?.street,
+          data?.address?.city,
+          stateIsoCode,
+          data?.address?.zipCode,
+          finalCountry,
+          formattedPhone,
+          true // suppressError = true to prevent error toast during auto-load
+        );
+
+        if (checkoutData) {
+          loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
+          return;
+        }
+      }
+    }
+  };
+
+  const resetPaymentElementState = () => {
+    // Clean up payment element before resetting state
+    if (baskElementsRef.current) {
+      try {
+        const paymentElement = baskElementsRef.current.getElement("payment");
+        if (paymentElement && typeof paymentElement.unmount === 'function') {
+          paymentElement.unmount();
+        }
+      } catch (e) {
+        // Element might not exist, ignore
       }
     }
     
-    const checkoutData = await getCheckoutData(
-      data?.address?.street,
-      data?.address?.city,
-      stateIsoCode,
-      data?.address?.zipCode,
-      finalCountry
-    );
-
-    if (checkoutData) {
-      loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
-      return;
-    }
+    // Don't manually manipulate DOM - let React handle it
+    // Just reset the state flags
+    setIsPaymentElementLoaded(false);
+    setIsLoadingPaymentElement(false);
   };
 
   const getStatesForCountry = () => {
@@ -191,10 +269,15 @@ export default function CheckoutPage() {
     cityValue?: string,
     stateValue?: string,
     zipCodeValue?: string,
-    countryValue?: string
+    countryValue?: string,
+    phoneValue?: string,
+    suppressError: boolean = false
   ) {
-    if (!validateShippingAddress(addressValue, cityValue, stateValue, zipCodeValue, countryValue)) {
-      toast.error("Please fill in the shipping address form.");
+    if (!validateShippingAddress(addressValue, cityValue, stateValue, zipCodeValue, countryValue, phoneValue)) {
+      // Only show error if it's a user-initiated action (not during auto-load from patient data)
+      if (!suppressError) {
+        toast.error("Please fill in the shipping address form.");
+      }
       return;
     }
 
@@ -245,7 +328,8 @@ export default function CheckoutPage() {
     cityValue?: string,
     stateValue?: string,
     zipCodeValue?: string,
-    countryValue?: string
+    countryValue?: string,
+    phoneValue?: string
   ) => {
     // Use provided values or fall back to state
     const addrLine = addressValue !== undefined ? addressValue : addressLine;
@@ -253,12 +337,14 @@ export default function CheckoutPage() {
     const stateVal = stateValue !== undefined ? stateValue : state;
     const zipVal = zipCodeValue !== undefined ? zipCodeValue : zipCode;
     const countryVal = countryValue !== undefined ? countryValue : country;
+    const phoneVal = phoneValue !== undefined ? phoneValue : phoneNumber;
 
     const newErrors: {
       addressLine?: string;
       city?: string;
       state?: string;
       zipCode?: string;
+      phoneNumber?: string;
     } = {};
 
     // Validate address line
@@ -296,11 +382,35 @@ export default function CheckoutPage() {
       }
     }
 
+    // Validate phone number
+    if (!phoneVal || phoneVal.trim() === "") {
+      newErrors.phoneNumber = "Phone number is required.";
+    } else {
+      // Extract digits and validate using helper function
+      const phoneDigits = phoneVal.replace(/\D/g, '');
+      // Remove country code if present (US: 1)
+      const phoneWithoutCountry = phoneDigits.length === 11 && phoneDigits.startsWith('1') 
+        ? phoneDigits.substring(1) 
+        : phoneDigits;
+      
+      if (!isValidPhone(phoneWithoutCountry)) {
+        newErrors.phoneNumber = "Please enter a valid US phone number (10 digits, first digit 2-9).";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmitShippingAddress = async () => {
+    // Mark that user has attempted to submit
+    setHasAttemptedSubmit(true);
+    
+    // Don't allow submission while patient data is still loading
+    if (isLoadingPatientData) {
+      return;
+    }
+
     if (validateShippingAddress()) {
       // Get checkout data and load payment element
       const token = localStorage.getItem("token");
@@ -310,17 +420,29 @@ export default function CheckoutPage() {
         return;
       }
 
+      // Extract digits from phone number and remove country code if present
+      const phoneDigits = phoneNumber.replace(/\D/g, '');
+      const phoneWithoutCountry = phoneDigits.length === 11 && phoneDigits.startsWith('1') 
+        ? phoneDigits.substring(1) 
+        : phoneDigits;
+
+      // Only include phoneNumber if it's valid
+      const patientUpdateData: any = {
+        city,
+        address: addressLine,
+        state,
+        zipCode,
+        country: country,
+      };
+
+      if (isValidPhone(phoneWithoutCountry)) {
+        patientUpdateData.phoneNumber = phoneWithoutCountry;
+      }
+
       const updatePatientData = await withTokenRefresh(
         updatePatient,
         token,
-        [{
-          city,
-          address: addressLine,
-          state,
-          zipCode,
-          country: country,
-          phoneNumber: phoneNumber,
-        }],
+        [patientUpdateData],
         { on404: () => router.push("/intake/contact") }
       );
 
@@ -331,7 +453,22 @@ export default function CheckoutPage() {
       if (!updatePatientData?.error) {
         toast.success("Patient data updated successfully!");
         setIsAddressSubmitted(true);
-        const checkoutData = await getCheckoutData();
+        // Extract digits from phone number and remove country code if present
+        const phoneDigits = phoneNumber.replace(/\D/g, '');
+        const phoneWithoutCountry = phoneDigits.length === 11 && phoneDigits.startsWith('1') 
+          ? phoneDigits.substring(1) 
+          : phoneDigits;
+        const formattedPhoneForCheckout = phoneDigits.length === 10 ? `1${phoneDigits}` : (phoneDigits.length === 11 && phoneDigits.startsWith('1') ? phoneDigits : phoneNumber);
+        
+        const checkoutData = await getCheckoutData(
+          addressLine,
+          city,
+          state,
+          zipCode,
+          country,
+          formattedPhoneForCheckout,
+          false // suppressError = false to show error if validation fails on user submit
+        );
         if(checkoutData){
           loadPaymentElementIntoDom(checkoutData?.publishableKey, checkoutData?.clientSecret);
           return;
@@ -344,7 +481,14 @@ export default function CheckoutPage() {
       router.push("/intake/contact");
       return;
     } else {
-      toast.error("Please fill out the information in the form.");
+      // Only show error if user has actually attempted to submit (not during auto-validation)
+      // and if fields are actually empty (meaning data wasn't loaded or user cleared them)
+      if (hasAttemptedSubmit) {
+        const hasEmptyFields = !addressLine || !city || !state || !zipCode || !phoneNumber;
+        if (hasEmptyFields) {
+          toast.error("Please fill out the information in the form.");
+        }
+      }
       return;
     }
   };
@@ -360,26 +504,56 @@ export default function CheckoutPage() {
       return;
     }
 
-    await baskPaymentRef.current.loadPaymentElement(publicKey);
-    clientSecretRef.current = clientSecret; // Store for later use
-    baskElementsRef.current = baskPaymentRef.current.elements({
-      locale: "en",
-      clientSecret: clientSecret,
-    });
+    // Start loading
+    setIsLoadingPaymentElement(true);
+    setIsPaymentElementLoaded(false);
 
-    const paymentElementOptions: PaymentElementOptions = {
-      layout: {
-        type: "accordion",
-        defaultCollapsed: true,
-        radios: true,
-        spacedAccordionItems: true,
-        maxAccordionItems: 3,
-      },
-    };
+    try {
+      await baskPaymentRef.current.loadPaymentElement(publicKey);
+      clientSecretRef.current = clientSecret; // Store for later use
+      baskElementsRef.current = baskPaymentRef.current.elements({
+        locale: "en",
+        clientSecret: clientSecret,
+      });
 
-    const element = baskElementsRef.current.create("payment", paymentElementOptions);
-    baskElementsRef.current.getElement("payment");
-    element.mount("#payment-container");
+      const paymentElementOptions: PaymentElementOptions = {
+        layout: {
+          type: "accordion",
+          defaultCollapsed: true,
+          radios: true,
+          spacedAccordionItems: true,
+          maxAccordionItems: 3,
+        },
+      };
+
+      // Clean up any existing payment element before mounting a new one
+      if (baskElementsRef.current) {
+        try {
+          const existingElement = baskElementsRef.current.getElement("payment");
+          if (existingElement && typeof existingElement.unmount === 'function') {
+            existingElement.unmount();
+          }
+        } catch (e) {
+          // Element might not exist, ignore
+        }
+      }
+
+      const element = baskElementsRef.current.create("payment", paymentElementOptions);
+      baskElementsRef.current.getElement("payment");
+      element.mount("#payment-container");
+      
+      // Small delay to ensure payment element is fully mounted before hiding loading overlay
+      // This prevents React from trying to remove the overlay while BaskPayment is still manipulating DOM
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Payment element is now loaded
+      setIsLoadingPaymentElement(false);
+      setIsPaymentElementLoaded(true);
+    } catch (error: any) {
+      setIsLoadingPaymentElement(false);
+      setIsPaymentElementLoaded(false);
+      toast.error(error.message || "Failed to load payment element.");
+    }
   }
 
   const confirmPayment = async () => {
@@ -611,9 +785,6 @@ export default function CheckoutPage() {
           </svg>
           Your privacy guaranteed
         </div>
-        <div className="text-sm text-[#7D8FA0] text-center mt-2">
-          Please submit valid shipping address to proceed with payment
-        </div>
         <div className="space-y-4">
           {/* Country or region */}
           <div>
@@ -655,6 +826,7 @@ export default function CheckoutPage() {
               onChange={(e) => {
                 setAddressLine(e.target.value);
                 setIsAddressSubmitted(false);
+                resetPaymentElementState();
                 if (errors.addressLine) {
                   setErrors({ ...errors, addressLine: undefined });
                 }
@@ -685,6 +857,7 @@ export default function CheckoutPage() {
               onChange={(e) => {
                 setCity(e.target.value);
                 setIsAddressSubmitted(false);
+                resetPaymentElementState();
                 if (errors.city) {
                   setErrors({ ...errors, city: undefined });
                 }
@@ -717,6 +890,7 @@ export default function CheckoutPage() {
                   onChange={(e) => {
                     setState(e.target.value);
                     setIsAddressSubmitted(false);
+                    resetPaymentElementState();
                     if (errors.state) {
                       setErrors({ ...errors, state: undefined });
                     }
@@ -742,6 +916,7 @@ export default function CheckoutPage() {
                   onChange={(e) => {
                     setState(e.target.value);
                     setIsAddressSubmitted(false);
+                    resetPaymentElementState();
                     if (errors.state) {
                       setErrors({ ...errors, state: undefined });
                     }
@@ -773,6 +948,7 @@ export default function CheckoutPage() {
                 onChange={(e) => {
                   setZipCode(e.target.value);
                   setIsAddressSubmitted(false);
+                  resetPaymentElementState();
                   if (errors.zipCode) {
                     setErrors({ ...errors, zipCode: undefined });
                   }
@@ -799,16 +975,28 @@ export default function CheckoutPage() {
             <PhoneInput
               country={"us"}
               value={phoneNumber}
-              onChange={(value) => setPhoneNumber(value)}
+              onChange={(value) => {
+                setPhoneNumber(value);
+                setIsAddressSubmitted(false);
+                resetPaymentElementState();
+                if (errors.phoneNumber) {
+                  setErrors({ ...errors, phoneNumber: undefined });
+                }
+              }}
               inputProps={{
                 id: "phoneNumber",
                 name: "phoneNumber",
                 required: true,
               }}
               containerClass="phone-input-container"
-              inputClass="phone-input-field"
+              inputClass={`phone-input-field ${errors.phoneNumber ? "border-red-500 focus:border-red-500 focus:ring-red-500" : ""}`}
               buttonClass="phone-input-button"
+              onlyCountries={["us"]}
+              countryCodeEditable={false}
             />
+            {errors.phoneNumber && (
+              <p className="mt-1 text-sm text-red-600">{errors.phoneNumber}</p>
+            )}
           </div>
 
           {/* Submit Shipping Address Button */}
@@ -824,10 +1012,24 @@ export default function CheckoutPage() {
         </div>
       </div>
       <div className="text-2xl mt-4 leading-8 font-semibold text-brand-300 text-center">
-        Enter Your Card Details
+        {isPaymentElementLoaded ? "Enter Your Card Details" : "Submit shipping address to continue"}
       </div>
       {/* Bask Payment Element */}
-      <div id="payment-container"></div>
+      <div className={`relative ${isLoadingPaymentElement || isPaymentElementLoaded ? 'min-h-[200px]' : ''}`}>
+        {isLoadingPaymentElement && (
+          <div className="absolute inset-0 flex flex-col justify-center items-center bg-white/80 rounded-lg z-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-transparent border-brand-500"></div>
+            <div className="mt-4 text-brand-500 font-semibold">
+              Loading payment element...
+            </div>
+          </div>
+        )}
+        <div 
+          id="payment-container" 
+          ref={paymentContainerRef}
+          className="relative"
+        />
+      </div>
 
       <div className="mt-6">
         <button

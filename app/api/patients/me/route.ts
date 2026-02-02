@@ -7,7 +7,7 @@ const SECRET_API_KEY = process.env.SECRET_API_KEY!;
 export async function POST(req: Request) {
   try {
     // Get body parameters
-    const { token, correlationId, city, address, state, zipCode, country, phoneNumber } = await req.json();
+    const { token, correlationId, city, address, state, zipCode, country, phoneNumber, firstName, lastName, sexAtBirth, dateOfBirth } = await req.json();
     
     // Validate token
     if (!token) {
@@ -19,38 +19,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Correlation ID is required.' }, { status: 400 });
     }
     
-    // Validate required fields
-    if (!city || city.trim() === "") {
-      return NextResponse.json({ error: 'city is required.' }, { status: 400 });
-    }
+    // Build request body (all fields are optional - only include if provided)
+    const requestBody: any = {};
     
-    if (!address || address.trim() === "") {
-      return NextResponse.json({ error: 'address is required.' }, { status: 400 });
-    }
-    
-    if (!state || state.trim() === "") {
-      return NextResponse.json({ error: 'state is required.' }, { status: 400 });
-    }
-    
-    if (!zipCode || zipCode.trim() === "") {
-      return NextResponse.json({ error: 'zipCode is required.' }, { status: 400 });
-    }
-    
-    // Build request body (country and phoneNumber are optional)
-    const requestBody: any = {
-      city,
-      address,
-      state,
-      zipCode,
-    };
-    
-    if (country) {
-      requestBody.country = country;
-    }
-    
-    if (phoneNumber) {
-      requestBody.phoneNumber = phoneNumber;
-    }
+    if (city !== undefined) requestBody.city = city;
+    if (address !== undefined) requestBody.address = address;
+    if (state !== undefined) requestBody.state = state;
+    if (zipCode !== undefined) requestBody.zipCode = zipCode;
+    if (firstName !== undefined) requestBody.firstName = firstName;
+    if (lastName !== undefined) requestBody.lastName = lastName;
+    if (sexAtBirth !== undefined) requestBody.sexAtBirth = sexAtBirth;
+    if (dateOfBirth !== undefined) requestBody.dateOfBirth = dateOfBirth;
+    if (phoneNumber !== undefined) requestBody.phoneNumber = phoneNumber;
+    if (country !== undefined) requestBody.country = country;
     
     const res = await fetch(`${BASE_URL}${API_CONFIG.PATIENTS_Me}`, {
       method: 'PUT',

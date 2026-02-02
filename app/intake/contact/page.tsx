@@ -49,7 +49,7 @@ export default function ContactPage() {
             return;
         }
         if (!isValidPhone(phone)) {
-            toast.error("Please enter a valid phone number.");
+            toast.error("Please enter a valid phone number. (10 digits, starting with 2-9)");
             return;
         }
         if (!isAgreed) {

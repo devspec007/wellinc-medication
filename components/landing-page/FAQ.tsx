@@ -100,7 +100,7 @@ const faqs = [
     avatar: '/landing/q1.jpg',
     question: 'How is it shipped?',
     answer: [
-      'Prescriptions received before 2 pm central time will be shipped the same day. Your prescription will be shipped next-day via UPS in a temperature controlled package. To ensure temperature management and weekend orders (Friday-Sunday) will be shipped Monday. You\'ll receive a tracking number for every shipment. Each shipment is fully insured for lost prescriptions. The only exception for insured product replacement is if a patient provides incorrect shipping information. If this occurs, please speak with customer service by emailing support@wellinc.com or calling us at (888) 696-7176.',
+      'Prescriptions received before 2 pm central time will be shipped the same day. Your prescription will be shipped next-day via UPS in a temperature controlled package. To ensure temperature management and weekend orders (Friday-Sunday) will be shipped Monday. You\'ll receive a tracking number for every shipment. Each shipment is fully insured for lost prescriptions. The only exception for insured product replacement is if a patient provides incorrect shipping information. If this occurs, please speak with customer service by emailing support@wellinc.com or calling us at (416) 262-6838.',
     ],
   },
   {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -22,6 +23,7 @@ const RECENT_WEIGHT_CHANGES_OPTIONS: RecentWeightChangesOption[] = [
 const TITLE = "Has your weight changed in the last year?";
 
 export default function RecentWeightChangesPage() {
+    const router = useRouter();
     const [selectedRecentWeightChanges, setSelectedRecentWeightChanges] = useState<string | "">("");
 
     useEffect(() => {
@@ -37,14 +39,15 @@ export default function RecentWeightChangesPage() {
             return;
         }
         localStorage.setItem("recent_weight_changes", JSON.stringify({ recent_weight_changes: selectedRecentWeightChanges }));
+        const selectedOption = RECENT_WEIGHT_CHANGES_OPTIONS.find(opt => opt.value === selectedRecentWeightChanges);
         updateQuestionnaire({
             type: "multiple-choice",
             id: "q14",
             text: TITLE,
-            answer: selectedRecentWeightChanges ? [selectedRecentWeightChanges] : [],
+            answer: selectedOption ? [selectedOption.label] : [],
             options: RECENT_WEIGHT_CHANGES_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/testimonial_3";
+        router.push("/intake/testimonial_3");
     };
     return (
         <div className="w-full">

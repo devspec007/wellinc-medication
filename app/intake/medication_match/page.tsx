@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -32,6 +33,7 @@ const DRUG_OPTIONS: DrugOption[] = [
 const TITLE = "Which of these is most important to you?";
 
 export default function MedicationMatchPage() {
+  const router = useRouter();
   const [medicationMatch, setMedicationMatch] = useState<string | "">("");
   const [drugOption, setDrugOption] = useState<string | "">("");
 
@@ -51,14 +53,15 @@ export default function MedicationMatchPage() {
     //   return;
     // }
     localStorage.setItem("medication_match", JSON.stringify({ medication_match: medicationMatch, drug_option: drugOption }));
+    const selectedOption = MEDICATION_MATCH_OPTIONS.find(opt => opt.value === medicationMatch);
     updateQuestionnaire({
       type: "multiple-choice",
       id: "q17",
       text: TITLE,
-      answer: medicationMatch ? [medicationMatch] : [],
+      answer: selectedOption ? [selectedOption.label] : [],
       options: MEDICATION_MATCH_OPTIONS.map(option => option.label),
     });
-    window.location.href = "/intake/current_medications";
+    router.push("/intake/current_medications");
   };
 
   return (

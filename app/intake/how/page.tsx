@@ -1,8 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export default function HowPage() {
+    const router = useRouter();
     const handleNext = () => {
-        window.location.href = "/intake/why";
+        router.push("/intake/why");
     };
     return (
         <div className="w-full">

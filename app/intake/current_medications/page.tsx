@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -19,6 +20,7 @@ const CURRENT_MEDICATIONS_OPTIONS: CurrentMedicationsOption[] = [
 const TITLE = "Do you currently take any medications?";
 
 export default function CurrentMedicationsPage() {
+    const router = useRouter();
     const [selectedCurrentMedications, setSelectedCurrentMedications] = useState<string | "">("");
     const [currentMedicationsDetails, setCurrentMedicationsDetails] = useState<string | "">("");
 
@@ -41,22 +43,25 @@ export default function CurrentMedicationsPage() {
             toast.error("Please add some details.")
             return;
         }
-        let answer = selectedCurrentMedications ? [selectedCurrentMedications] : [];
-        // add the details to the answer if it exists
-        if(currentMedicationsDetails.length > 0) {
-            answer.push(currentMedicationsDetails);
+        const selectedOption = CURRENT_MEDICATIONS_OPTIONS.find(opt => opt.value === selectedCurrentMedications);
+        // Combine label and details into a single string (only include details if "Yes" is selected)
+        let answer = selectedOption ? selectedOption.label : "";
+        if(selectedCurrentMedications === "yes" && currentMedicationsDetails.length > 0) {
+            answer = `${answer}: ${currentMedicationsDetails}`;
         }
         updateQuestionnaire({
-            type: "multiple-choice",
+            type: "text",
             id: "q18",
             text: TITLE,
             answer: answer,
-            options: CURRENT_MEDICATIONS_OPTIONS.map(option => option.label),
         });
 
         // save the data to local storage
-        localStorage.setItem("current_medications", JSON.stringify({ current_medications: selectedCurrentMedications, current_medications_details: currentMedicationsDetails }));
-        window.location.href = "/intake/motivated";
+        localStorage.setItem("current_medications", JSON.stringify({ 
+            current_medications: selectedCurrentMedications, 
+            current_medications_details: currentMedicationsDetails 
+        }));
+        router.push("/intake/motivated");
     };
     return (
         <div className="w-full">
@@ -78,7 +83,13 @@ export default function CurrentMedicationsPage() {
                                     value={option.value}
                                     label={option.label}
                                     checked={selectedCurrentMedications === option.value}
-                                    onChange={() => setSelectedCurrentMedications(option.value)}
+                                    onChange={() => {
+                                        setSelectedCurrentMedications(option.value);
+                                        // Clear details when "No" is selected
+                                        if (option.value === "no") {
+                                            setCurrentMedicationsDetails("");
+                                        }
+                                    }}
                                 />
                             ))}
                         </div>
@@ -86,7 +97,7 @@ export default function CurrentMedicationsPage() {
                     {selectedCurrentMedications === "yes" && (
                         <div>
                             <div className="label mb-1">
-                                <label htmlFor="form_current_medications_details">Please add some details about the current medicine you take if necessary.</label>
+                                <label htmlFor="form_current_medications_details">Please input the name of the current medication you take</label>
                             </div>
                             <textarea
                                 rows={4}

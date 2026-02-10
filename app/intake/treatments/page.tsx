@@ -68,7 +68,7 @@ export default function TreatmentsPage() {
       membershipPlanVariantId: variantId,
     }
     localStorage.setItem("selectedProduct", JSON.stringify(selectedProduct));
-    window.location.href = "/intake/checkout";
+    router.push("/intake/checkout");
   };
 
   const getSupplyWeek = (weeksSupply: string) => {
@@ -133,12 +133,22 @@ export default function TreatmentsPage() {
     const isValidPhoneNumber = isValidPhone(phoneRaw);
     const dob = JSON.parse(localStorage.getItem("dob") || "{}");
     const dateOfBirth = `${dob.dobMonth}/${dob.dobDay}/${dob.dobYear}`;
+    // Extract height and weight from height_weight localStorage
+    const heightWeightData = JSON.parse(localStorage.getItem("height_weight") || "{}");
+    const feet = heightWeightData.feet || 0;
+    const inches = heightWeightData.inches || 0;
+    const patientHeight = `${feet}'${inches}`;
+    const patientWeight = Number(heightWeightData.weight) || 0;
+
     (async () => {
       const patientData: any = {
         firstName,
         lastName,
         sexAtBirth: gender,
         dateOfBirth: dateOfBirth,
+        height: patientHeight,
+        weight: patientWeight,
+        medications: [],
       };
       
       // Only add phoneNumber if it's valid
@@ -146,6 +156,14 @@ export default function TreatmentsPage() {
         patientData.phoneNumber = phoneDigits;
       }
       
+      if(JSON.parse(localStorage.getItem("current_medications") || "{}").current_medications === "yes") {
+        let currentMedicationsRaw = JSON.parse(localStorage.getItem("current_medications") || "{}");
+        let patientMedication = currentMedicationsRaw.current_medications_details;
+        patientData.medications.push({ name: patientMedication });
+        console.log("currentMedications::Treatments::", patientMedication);
+      }
+
+
       const res = await withTokenRefresh(
         updatePatient,
         token,
@@ -208,11 +226,26 @@ export default function TreatmentsPage() {
       return;
     }
 
+    // Check if previous_medication exists in localStorage
+    let previousMedication = null;
+    const previousMedicationRaw = localStorage.getItem("previous_medication");
+    if (previousMedicationRaw) {
+      try {
+        const parsed = JSON.parse(previousMedicationRaw);
+        // Only send if it has valid data
+        if (parsed && parsed.currentWeightLoss) {
+          previousMedication = parsed;
+        }
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+    }
+    console.log("previousMedication::", previousMedication);
     (async () => {
       const res = await withTokenRefresh(
         answerQuestions,
         token,
-        [questions],
+        [questions, previousMedication],
         { on404: () => router.push("/intake/contact") }
       );
 

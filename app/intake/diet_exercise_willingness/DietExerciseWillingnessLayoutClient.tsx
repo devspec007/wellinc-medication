@@ -5,14 +5,14 @@ import IntakeLayout from "@/components/IntakeLayout";
 import { intakeSteps } from "@/lib/intakeSteps";
 
 export default function DietExerciseWillingnessLayoutClient({ children }: { children: React.ReactNode }) {
-  const [weightLossMedications, setWeightLossMedications] = useState<string>("");
+  const [hasPreviousMedication, setHasPreviousMedication] = useState<boolean>(false);
 
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("weight_loss_medications") || "{}");
-    setWeightLossMedications(data.weight_loss_medications || "");
+    const data = JSON.parse(localStorage.getItem("previous_medication") || "{}");
+    setHasPreviousMedication(!!data.currentWightLoss);
   }, []);
 
-  const backHref = weightLossMedications === "glp_1_medication" ? "/intake/glp_1_medication" : weightLossMedications === "different_medication" ? "/intake/different_medication" : "/intake/weight_loss_medications";
+  const backHref = hasPreviousMedication ? "/intake/previous_medication" : "/intake/weight_loss_medications";
     return (
         <IntakeLayout
             steps={intakeSteps}

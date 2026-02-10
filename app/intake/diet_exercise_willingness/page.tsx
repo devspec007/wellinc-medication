@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import CheckboxCard from "@/components/CheckboxCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -20,6 +21,7 @@ const DIET_EXERCISE_WILLINGNESS_OPTIONS: DietExerciseWillingnessOption[] = [
 const TITLE = "If clinically appropriate, are you willing to:";
 
 export default function DietExerciseWillingnessPage() {
+    const router = useRouter();
     const [selectedDietExerciseWillingness, setSelectedDietExerciseWillingness] = useState<string[]>([]);
 
     useEffect(() => {
@@ -59,7 +61,7 @@ export default function DietExerciseWillingnessPage() {
             answer: selectedDietExerciseWillingness.map(value => DIET_EXERCISE_WILLINGNESS_OPTIONS.find(opt => opt.value === value)?.label || value),
             options: DIET_EXERCISE_WILLINGNESS_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/recent_weight_changes";
+        router.push("/intake/recent_weight_changes");
     };
 
     return (

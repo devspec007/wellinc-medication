@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 
@@ -18,6 +19,7 @@ const PREGNANCY_OPTIONS: PregnancyOption[] = [
 ];
 
 export default function PregnancyPage() {
+    const router = useRouter();
     const [pregnancy, setPregnancy] = useState<string | "">("");
 
     useEffect(() => {
@@ -32,9 +34,9 @@ export default function PregnancyPage() {
         }
         localStorage.setItem("pregnancy", JSON.stringify({ pregnancy }));
         if (pregnancy === "none_of_above") {
-            window.location.href = "/intake/priorities";
+            router.push("/intake/priorities");
         } else {
-            window.location.href = "/intake/not_qualified_female";
+            router.push("/intake/not_qualified_female");
         }
     };
     return (

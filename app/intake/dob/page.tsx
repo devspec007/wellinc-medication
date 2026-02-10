@@ -2,6 +2,7 @@
 
 import Select from "@/components/Select";
 import { ChangeEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const MONTH_OPTIONS: { value: string; label: string }[] = [
@@ -56,6 +57,7 @@ const DAY_OPTIONS: { value: string; label: string }[] = [
 ];
 
 export default function DobPage() {
+    const router = useRouter();
     const [dobMonth, setDobMonth] = useState<string>("");
     const [dobDay, setDobDay] = useState<string>("");
     const [dobYear, setDobYear] = useState<number | "">("");
@@ -77,7 +79,7 @@ export default function DobPage() {
             return;
         }
         localStorage.setItem("dob", JSON.stringify({ dobMonth, dobDay, dobYear }));
-        window.location.href = "/intake/medical_review";
+        router.push("/intake/medical_review");
     };
 
     return (

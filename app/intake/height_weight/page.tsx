@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { updateQuestionnaire } from "@/lib/helper";
 
 const TITLE = "What is your height and weight?";
 
 export default function HeightWeightPage() {
+  const router = useRouter();
   const [feet, setFeet] = useState<number | "">("");
   const [inches, setInches] = useState<number | "">("");
   const [weight, setWeight] = useState<number | "">("");
@@ -39,9 +41,9 @@ export default function HeightWeightPage() {
     
     const bmi = (weight / ((feet * 12 + inches) ** 2)) * 703;
     if (bmi < 27) {
-      window.location.href = "/intake/not_qualified_bmi";
+      router.push("/intake/not_qualified_bmi");
     } else {
-      window.location.href = "/intake/weight_goal";
+      router.push("/intake/weight_goal");
     }
   };
 

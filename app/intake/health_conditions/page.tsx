@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import CheckboxCard from "@/components/CheckboxCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -29,6 +30,7 @@ const HEALTH_CONDITION_OPTIONS: HealthConditionOption[] = [
 const TITLE = "Do any of these apply to you?";
 
 export default function HealthConditionsPage() {
+    const router = useRouter();
     const [selectedHealthConditions, setSelectedHealthConditions] = useState<string[]>([]);
 
     useEffect(() => {
@@ -68,7 +70,15 @@ export default function HealthConditionsPage() {
             answer: selectedHealthConditions.map(value => HEALTH_CONDITION_OPTIONS.find(opt => opt.value === value)?.label || value),
             options: HEALTH_CONDITION_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/more_health_conditions";
+
+        // Check if "none of these" is selected
+        if (selectedHealthConditions.includes("none_of_these") && selectedHealthConditions.length === 1) {
+            // User selected only "none of these", proceed to next page
+            router.push("/intake/more_health_conditions");
+        } else {
+            // User selected a disqualifying health condition, redirect to disqualifier page
+            router.push("/intake/disqualifer_health?from=health_conditions");
+        }
     };
 
     return (

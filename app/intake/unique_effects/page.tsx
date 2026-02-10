@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import CheckboxCard from "@/components/CheckboxCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -23,6 +24,7 @@ const EFFECT_OPTIONS: EffectOption[] = [
 const TITLE = "Do you experience any of the following?";
 
 export default function UniqueEffectsPage() {
+    const router = useRouter();
     const [selectedEffects, setSelectedEffects] = useState<string[]>([]);
     const [gender, setGender] = useState<string | "">("");
 
@@ -73,9 +75,9 @@ export default function UniqueEffectsPage() {
         });
         
         if (gender === "male") {
-            window.location.href = "/intake/priorities";
+            router.push("/intake/priorities");
         } else {
-            window.location.href = "/intake/pregnancy";
+            router.push("/intake/pregnancy");
         }
     };
 

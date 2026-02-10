@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -21,6 +22,7 @@ const SLEEP_OPTIONS: SleepOption[] = [
 const TITLE = "How is your sleep, overall?";
 
 export default function SleepPage() {
+    const router = useRouter();
     const [sleep, setSleep] = useState<string | "">("");
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function SleepPage() {
             answer: selectedSleep?.label ? [selectedSleep.label] : [],
             options: SLEEP_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/sleep_hours";
+        router.push("/intake/sleep_hours");
     };
     return (
         <div className="w-full">

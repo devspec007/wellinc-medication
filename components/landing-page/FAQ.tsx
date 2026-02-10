@@ -39,7 +39,7 @@ const faqs = [
     avatar: '/landing/q4.jpg',
     question: 'What States/Jurisdictions are eligible?',
     answer: [
-      'WellInc currently provides services to all US States EXCEPT Mississippi and Louisiana where prescription of weight loss medications via telehealth is prohibited.',
+      'WellInc currently provides services to all US States.',
     ],
   },
   {
@@ -47,7 +47,8 @@ const faqs = [
     question: 'How does the pricing work?',
     answer: [
       'WellInc partners with licensed doctors and pharmacy to offer competitive pricing on compounded GLP-1 weight loss medications. Our pricing is transparent with no hidden costs or monthly fees.',
-      'For Semaglutide (same active ingredient in Ozempic®) we charge $297/month. For Tirzepatide (same active ingredient found in Mounjaro®) we charge $399/month.',
+      'For Semaglutide (same active ingredient in Ozempic®) pricing starts at $195/month (monthly), $175/month (quarterly), $165/month (6 months), or $155/month (annual).',
+      'For Tirzepatide (same active ingredient found in Mounjaro®) pricing starts at $295/month (monthly), $265/month (quarterly), $245/month (6 months), or $225/month (annual).',
       'Included in this simple pricing is your medication, doctors visits (normally $99/visit), 1-day FedEx or UPS shipping, and all supplies needed for injections.',
       'Competitors will often charge \'access\' or membership fees. WellInc does not have those so that pricing is extremely clear and you don\'t get surprise costs.',
     ],
@@ -56,22 +57,21 @@ const faqs = [
     avatar: '/landing/q6.jpg',
     question: 'What if I need to cancel?',
     answer: [
-      'With WellInc there are no contracts for our month to month pricing. We also offer subscribe and save discounts where customers will agree to a subscription length for stated monthly discount. Month to month customers can cancel their shipment anytime by sending an email to support@wellinc.com or call us at 888-696-7176. We want to make sure that our customers love the results of our treatment plans so we offer a patient satisfaction guarantee. If you are unhappy with your results, let us know and we\'ll make it right.',
+      'With WellInc there are no contracts for our month to month pricing. We also offer subscribe and save discounts where customers will agree to a subscription length for stated monthly discount. Month to month customers can cancel their shipment anytime by sending an email to support@wellinc.com or call us at (416) 262-6838. We want to make sure that our customers love the results of our treatment plans so we offer a patient satisfaction guarantee. If you are unhappy with your results, let us know and we\'ll make it right.',
     ],
   },
   {
     avatar: '/landing/q2.jpg',
     question: 'Is the medication real semaglutide & tirzepatide?',
-    answer: {
-      text: 'Yes, both of our GLP-1 weight loss medications are real prescription medications that are prescribed by a doctor and compounded by a real US based pharmacy. We offer only the best Semaglutide and Tirzepatide medications for weightloss management for customers that meet the qualifications required for GLP-1 medications. These are the same medications that people are talking about and getting real results with all over social media.',
-      images: true,
-    },
+    answer: [
+      'Yes, both of our GLP-1 weight loss medications are real prescription medications that are prescribed by a doctor and compounded by a real US based pharmacy. We offer only the best Semaglutide and Tirzepatide medications for weightloss management for customers that meet the qualifications required for GLP-1 medications. These are the same medications that people are talking about and getting real results with all over social media.',
+    ],
   },
   {
     avatar: '/landing/q7.jpg',
     question: 'Do you offer non-injectable options?',
     answer: [
-      'Yes! We currently offer oral sublingual Semaglutide and Tirzepatide. Studies show this medication is a great and effective alternative to injections.',
+      'No! We don’t offer oral (sublingual) Semaglutide or Tirzepatide. Current evidence suggests these options aren’t as effective or as reliable as injections, so we stick to injectable treatment for better, more consistent results.',
     ],
   },
   {
@@ -85,22 +85,22 @@ const faqs = [
   {
     avatar: '/landing/q9.jpg',
     question: 'Where do my prescriptions come from?',
-    answer: {
-      pharmacies: true,
-    },
+    answer: [
+      'Our pharmacies are 503A compounding pharmacies based right here in the US. A 503A pharmacy is a designation for traditional compounding, meaning they prepare medications specifically for individual patients based on a valid prescription. These pharmacies follow strict state and federal guidelines to ensure safety and quality for customized medications.',
+    ],
   },
   {
     avatar: '/landing/q10.jpg',
     question: 'How do I take my medication?',
-    answer: {
-      medication: true,
-    },
+    answer: [
+      'You will be provided with small insulin sized needles along with your medication. Your doctor will explain how and when to take your medication during your telemed visit. You will start with a low dose to begin your treatment once per week as your body gets used to the medication and increase your dose every 4 weeks until you are at your full dosage. Medication will be administered by injecting into the fatty area on your stomach weekly.',
+    ],
   },
   {
     avatar: '/landing/q1.jpg',
     question: 'How is it shipped?',
     answer: [
-      'Prescriptions received before 2 pm central time will be shipped the same day. Your prescription will be shipped next-day via UPS in a temperature controlled package. To ensure temperature management and weekend orders (Friday-Sunday) will be shipped Monday. You\'ll receive a tracking number for every shipment. Each shipment is fully insured for lost prescriptions. The only exception for insured product replacement is if a patient provides incorrect shipping information. If this occurs, please speak with customer service by emailing support@wellinc.com or calling us at (888) 696-7176.',
+      'Prescriptions received before 2 pm central time will be shipped the same day. Your prescription will be shipped next-day via UPS in a temperature controlled package. To ensure temperature management and weekend orders (Friday-Sunday) will be shipped Monday. You\'ll receive a tracking number for every shipment. Each shipment is fully insured for lost prescriptions. The only exception for insured product replacement is if a patient provides incorrect shipping information. If this occurs, please speak with customer service by emailing support@wellinc.com or calling us at (416) 262-6838.',
     ],
   },
   {
@@ -114,7 +114,7 @@ const faqs = [
     avatar: '/landing/q12.jpg',
     question: 'How do I contact support?',
     answer: [
-      'You can reach our friendly support team by emailing support@wellinc.com or calling us at (888) 696-7176. For faster service, visit our Patient Services page to submit a message, request a refill, or check order status. We\'re here to help!',
+      'You can reach our friendly support team by emailing support@wellinc.com or calling us at (416) 262-6838. For faster service, visit our Patient Services page to submit a message, request a refill, or check order status. We\'re here to help!',
     ],
   },
 ];
@@ -144,25 +144,6 @@ export default function FAQ() {
         );
       }
       
-      // Medication real semaglutide with images
-      if (answer.images) {
-        return (
-          <div className="space-y-4 font-light px-1">
-            <p>{answer.text}</p>
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="md:w-1/2 w-full">
-                <p>WellInc Semaglutide Purity Analysis</p>
-                <img src="/landing/sema-cofa001.jpg" className="w-full h-auto rounded shadow" alt="Semaglutide Purity" />
-              </div>
-              <div className="md:w-1/2 w-full">
-                <p>WellInc Tirzepatide Purity Analysis</p>
-                <img src="/landing/tirze-cofa001.jpg" className="w-full h-auto rounded shadow" alt="Tirzepatide Purity" />
-              </div>
-            </div>
-          </div>
-        );
-      }
-      
       // Dosage table
       if (answer.dosageTable) {
         return (
@@ -179,7 +160,6 @@ export default function FAQ() {
                         0.5 mg/week for the next 8 weeks<br />
                         Dosage will include Ondanestron (brand name Zofran®)
                         <br /><br />
-                        <img src="/landing/semaglutide-dosage.png" className="w-full h-auto" alt="Semaglutide Dosage" />
                       </td>
                     </tr>
                   </tbody>
@@ -194,56 +174,12 @@ export default function FAQ() {
                         10mg for the first 4 weeks<br />
                         20mg for the next 8 weeks<br />
                         <br />
-                        <img src="/landing/tirzepatide-dosage.png" className="w-full h-auto" alt="Tirzepatide Dosage" />
                       </td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
-          </div>
-        );
-      }
-      
-      // Pharmacies info
-      if (answer.pharmacies) {
-        return (
-          <div className="space-y-4 font-light px-1">
-            <p>Our pharmacies are 503A compounding pharmacies based right here in the US. A 503A pharmacy is a designation for traditional compounding, meaning they prepare medications specifically for individual patients based on a valid prescription. These pharmacies follow strict state and federal guidelines to ensure safety and quality for customized medications.</p>
-            <p>Depending on your location, valid prescriptions will be filled by one of two Network Pharmacies. Valid prescriptions for individuals residing in Alaska, Arkansas, Arizona, Colorado, Delaware, Florida, Georgia, Hawaii, Iowa, Idaho, Illinois, Indiana, Kansas, Kentucky, Maine, Maryland, Massachusetts, Michigan, Minnesota, Missouri, Montana, North Dakota, Nebraska, New Hampshire, New Jersey, New Mexico, Nevada, New York, Ohio, Oklahoma, Oregon, Pennsylvania, Rhode Island, South Dakota, Tennessee, Texas, Utah, Virginia, Vermont, Washington DC, Wisconsin, Wyoming, and West Virginia will be filled by:</p>
-            <address className="not-italic my-4" style={{ whiteSpace: 'pre-line' }}>
-              CraftedRx<br />
-              609 N State Hwy 47, Suite C<br />
-              Warrenton, MO 63383<br />
-              +1 (888) 788-0485
-            </address>
-            <p>Valid prescriptions for individuals residing in Alabama, California, Connecticut, North Carolina, South Carolina, and Washington will be filled by:</p>
-            <address className="not-italic my-4" style={{ whiteSpace: 'pre-line' }}>
-              ChemistryRx<br />
-              950 Henderson Blvd.<br />
-              Folcroft, PA 19032<br />
-              +1 (877) 989-6128
-            </address>
-            <p>WellInc does not provide services to individuals residing in Mississippi & Louisiana, where prescription of weight loss medications via telehealth is prohibited.</p>
-          </div>
-        );
-      }
-      
-      // Medication instructions
-      if (answer.medication) {
-        return (
-          <div className="space-y-4 font-light px-1">
-            <p><strong>For Semaglutide & Tirzepatide Injections:</strong></p>
-            <p>You will be provided with small insulin sized needles along with your medication. Your doctor will explain how and when to take your medication during your telemed visit. You will start with a low dose to begin your treatment once per week as your body gets used to the medication and increase your dose every 4 weeks until you are at your full dosage. Medication will be administered by injecting into the fatty area on your stomach weekly.</p>
-            <p>For our non-injectable Semaglutide option, it&apos;s important to follow the correct steps to ensure proper absorption and effectiveness:</p>
-            <p><strong>For Compounded Semaglutide & Tirzepatide Sublingual Drops:</strong></p>
-            <p>
-              Use the dropper to place the prescribed amount (typically 0.5 mg) under your tongue.
-              Hold the drops under your tongue for 1-2 minutes before swallowing to ensure proper absorption.
-              Take the drops daily for 4 weeks as directed, with higher dosing options available if recommended by your healthcare provider.
-              Avoid eating, drinking, or smoking for at least 15 minutes before and after taking the drops.
-            </p>
-            <p>Following these instructions will help you get the most out of your Semaglutide treatment. If you have any questions, feel free to contact our support team for guidance!</p>
           </div>
         );
       }
@@ -263,24 +199,6 @@ export default function FAQ() {
         );
       }
       
-      // Medication real semaglutide with images
-      if (answer.images) {
-        return (
-          <div className="space-y-4 font-light px-1">
-            <p>{answer.text}</p>
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="md:w-1/2 w-full">
-                <p>WellInc Semaglutide Purity Analysis</p>
-                <img src="/landing/sema-cofa001.jpg" className="w-full h-auto rounded shadow" alt="Semaglutide Purity" />
-              </div>
-              <div className="md:w-1/2 w-full">
-                <p>WellInc Tirzepatide Purity Analysis</p>
-                <img src="/landing/tirze-cofa001.jpg" className="w-full h-auto rounded shadow" alt="Tirzepatide Purity" />
-              </div>
-            </div>
-          </div>
-        );
-      }
     }
     
     if (Array.isArray(answer)) {

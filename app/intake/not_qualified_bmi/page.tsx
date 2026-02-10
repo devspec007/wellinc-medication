@@ -21,6 +21,7 @@ export default function NotQualifiedBMI() {
   };
 
   const handleSelectionCorrect = () => {
+    localStorage.clear();
     router.push("/");
   };
 

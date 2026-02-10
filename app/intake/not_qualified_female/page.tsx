@@ -10,6 +10,7 @@ export default function NotQualifiedFemale() {
   };
 
   const handleSelectionCorrect = () => {
+    localStorage.clear();
     router.push("/");
   };
 

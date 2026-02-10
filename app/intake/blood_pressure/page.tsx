@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -22,6 +23,7 @@ const BLOOD_PRESSURE_OPTIONS: BloodPressureOption[] = [
 const TITLE = "What is your average blood pressure range?";
 
 export default function BloodPressurePage() {
+    const router = useRouter();
     const [selectedBloodPressure, setSelectedBloodPressure] = useState<string | "">("");
 
     useEffect(() => {
@@ -37,14 +39,15 @@ export default function BloodPressurePage() {
             return;
         }
         localStorage.setItem("blood_pressure", JSON.stringify({ blood_pressure: selectedBloodPressure }));
+        const selectedOption = BLOOD_PRESSURE_OPTIONS.find(opt => opt.value === selectedBloodPressure);
         updateQuestionnaire({
             type: "multiple-choice",
             id: "q15",
             text: TITLE,
-            answer: selectedBloodPressure ? [selectedBloodPressure] : [],
+            answer: selectedOption ? [selectedOption.label] : [],
             options: BLOOD_PRESSURE_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/resting_heart_rate";
+        router.push("/intake/resting_heart_rate");
     };
     return (
         <div className="w-full">

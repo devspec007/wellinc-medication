@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SpeedFasterPage() {
+    const router = useRouter();
     const [speedDifference, setSpeedDifference] = useState<number | "">("");
     const [weeks, setWeeks] = useState<number | "">("");
 
@@ -18,7 +20,7 @@ export default function SpeedFasterPage() {
     }, []);
 
     const handleNext = () => {
-        window.location.href = "/intake/sleep";
+        router.push("/intake/sleep");
     };
 
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -21,6 +22,7 @@ const SLEEP_HOURS_OPTIONS: SleepHoursOption[] = [
 const TITLE = "How many hours of sleep do you usually get each night?";
 
 export default function SleepHoursPage() {
+    const router = useRouter();
     const [sleepHours, setSleepHours] = useState<string | "">("");
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function SleepHoursPage() {
             answer: selectedSleepHours?.label ? [selectedSleepHours.label] : [],
             options: SLEEP_HOURS_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/testimonial_2";
+        router.push("/intake/testimonial_2");
     };
     return (
         <div className="w-full">

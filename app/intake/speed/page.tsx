@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -21,6 +22,7 @@ const SPEED_OPTIONS: SpeedOption[] = [
 const TITLE = "How is that pace for you?";
 
 export default function SpeedPage() {
+    const router = useRouter();
     const [speed, setSpeed] = useState<string | "">("");
     const [weeks, setWeeks] = useState<number | "">("");
     const [goalWeight, setGoalWeight] = useState<number | "">("");
@@ -55,11 +57,11 @@ export default function SpeedPage() {
             options: SPEED_OPTIONS.map(option => option.label),
         });
         if (speed === "speed_good") {
-            window.location.href = "/intake/speed_good";
+            router.push("/intake/speed_good");
         } else if (speed === "speed_faster") {
-            window.location.href = "/intake/speed_faster";
+            router.push("/intake/speed_faster");
         } else if (speed === "speed_too_fast") {
-            window.location.href = "/intake/speed_too_fast";
+            router.push("/intake/speed_too_fast");
         }
     };
 

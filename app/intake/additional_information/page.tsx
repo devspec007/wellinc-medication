@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -19,6 +20,7 @@ const ADDITIONAL_INFORMATION_OPTIONS: AdditionalInformationOption[] = [
 const TITLE = "Do you have any further information which you would like our medical team to know?";
 
 export default function AdditionalInformationPage() {
+    const router = useRouter();
     const [selectedAdditionalInformation, setSelectedAdditionalInformation] = useState<string | "">("");
     const [additionalInformationDetails, setAdditionalInformationDetails] = useState<string | "">("");
 
@@ -41,19 +43,20 @@ export default function AdditionalInformationPage() {
             toast.error("Please input your details.");
             return;
         }
-        let answer = selectedAdditionalInformation ? [selectedAdditionalInformation] : [];
-        if(additionalInformationDetails.length > 0) {
-            answer.push(additionalInformationDetails);
+        const selectedOption = ADDITIONAL_INFORMATION_OPTIONS.find(opt => opt.value === selectedAdditionalInformation);
+        // Combine label and details into a single string (only include details if "Yes" is selected)
+        let answer = selectedOption ? selectedOption.label : "";
+        if(selectedAdditionalInformation === "yes" && additionalInformationDetails.length > 0) {
+            answer = `${answer}: ${additionalInformationDetails}`;
         }
         updateQuestionnaire({
-            type: "multiple-choice",
+            type: "text",
             id: "q20",
             text: TITLE,
             answer: answer,
-            options: ADDITIONAL_INFORMATION_OPTIONS.map(option => option.label),
         });
         localStorage.setItem("additional_information", JSON.stringify({ additional_information: selectedAdditionalInformation, additional_information_details: additionalInformationDetails }));
-        window.location.href = "/intake/dob";
+        router.push("/intake/dob");
     };
     return (
         <div className="w-full">
@@ -79,7 +82,13 @@ export default function AdditionalInformationPage() {
                                     value={option.value}
                                     label={option.label}
                                     checked={selectedAdditionalInformation === option.value}
-                                    onChange={() => setSelectedAdditionalInformation(option.value)}
+                                    onChange={() => {
+                                        setSelectedAdditionalInformation(option.value);
+                                        // Clear details when "No" is selected
+                                        if (option.value === "no") {
+                                            setAdditionalInformationDetails("");
+                                        }
+                                    }}
                                 />
                             ))}
                         </div>

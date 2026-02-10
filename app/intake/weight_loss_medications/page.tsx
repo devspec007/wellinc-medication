@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -20,6 +21,7 @@ const WEIGHT_LOSS_MEDICATION_OPTIONS: WeightLossMedicationOption[] = [
 const TITLE = "Have you taken GLP-1 medication for weight loss within the past 4 weeks?";
 
 export default function WeightLossMedicationsPage() {
+    const router = useRouter();
     const [selectedWeightLossMedications, setSelectedWeightLossMedications] = useState<string | "">("");
 
     useEffect(() => {
@@ -35,19 +37,23 @@ export default function WeightLossMedicationsPage() {
             return;
         }
         localStorage.setItem("weight_loss_medications", JSON.stringify({ weight_loss_medications: selectedWeightLossMedications }));
+        const selectedOption = WEIGHT_LOSS_MEDICATION_OPTIONS.find(opt => opt.value === selectedWeightLossMedications);
         updateQuestionnaire({
             type: "multiple-choice",
             id: "q12",
             text: TITLE,
-            answer: selectedWeightLossMedications ? [selectedWeightLossMedications] : [],
+            answer: selectedOption ? [selectedOption.label] : [],
             options: WEIGHT_LOSS_MEDICATION_OPTIONS.map(option => option.label),
         });
         if (selectedWeightLossMedications === "no") {
-            window.location.href = "/intake/diet_exercise_willingness";
-        } else if (selectedWeightLossMedications === "glp_1_medication") {
-            window.location.href = "/intake/glp_1_medication";
+            // Remove previous_medication from localStorage when "no" is selected
+            localStorage.removeItem("previous_medication");
+            router.push("/intake/diet_exercise_willingness");
         } else if (selectedWeightLossMedications === "different_medication") {
-            window.location.href = "/intake/different_medication";
+            localStorage.setItem("previous_medication", JSON.stringify({ currentWeightLoss: "neither" }));
+            router.push("/intake/diet_exercise_willingness");
+        } else if (selectedWeightLossMedications === "glp_1_medication") {
+            router.push("/intake/previous_medication");
         }
     };
     return (

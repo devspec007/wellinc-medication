@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function NotQualifiedBMI() {
+  const router = useRouter();
   const [bmi, setBmi] = useState<string | "">("");
 
   useEffect(() => {
@@ -15,11 +17,11 @@ export default function NotQualifiedBMI() {
   }, []);
 
   const handleCheckAgain = () => {
-    window.location.href = "/intake/height_weight";
+    router.push("/intake/height_weight");
   };
 
   const handleSelectionCorrect = () => {
-    window.location.href = "/";
+    router.push("/");
   };
 
   return (

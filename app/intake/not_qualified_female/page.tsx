@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function NotQualifiedFemale() {
+  const router = useRouter();
   const handleCheckAgain = () => {
-    window.location.href = "/intake/pregnancy";
+    router.push("/intake/pregnancy");
   };
 
   const handleSelectionCorrect = () => {
-    window.location.href = "/";
+    router.push("/");
   };
 
   return (

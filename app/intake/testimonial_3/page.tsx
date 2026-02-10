@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Testimonial3Page() {
+    const router = useRouter();
     const [gender, setGender] = useState<string | "">("");
     useEffect(() => {
         const data = JSON.parse(localStorage.getItem("gender") || "{}");
@@ -10,7 +12,7 @@ export default function Testimonial3Page() {
     }, []);
 
     const handleNext = () => {
-        window.location.href = "/intake/blood_pressure";
+        router.push("/intake/blood_pressure");
     };
     return (
         gender === "female" ? (

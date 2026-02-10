@@ -1,8 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export default function MagicPage() {
+    const router = useRouter();
     const handleNext = () => {
-        window.location.href = "/intake/testimonial_1";
+        router.push("/intake/testimonial_1");
     };
     return (
         <div className="w-full">

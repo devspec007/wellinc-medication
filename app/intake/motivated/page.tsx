@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -21,6 +22,7 @@ const MOTIVATED_OPTIONS: MotivatedOption[] = [
 const TITLE = "How motivated are you to reach your weight goal?";
 
 export default function MotivatedPage() {
+    const router = useRouter();
     const [motivated, setMotivated] = useState<string | "">("");
 
     useEffect(() => {
@@ -33,16 +35,17 @@ export default function MotivatedPage() {
             toast.error("Please select your answer.");
             return;
         }
+        const selectedOption = MOTIVATED_OPTIONS.find(opt => opt.value === motivated);
         updateQuestionnaire({
             type: "multiple-choice",
             id: "q19",
             text: TITLE,
-            answer: motivated ? [motivated] : [],
+            answer: selectedOption ? [selectedOption.label] : [],
             options: MOTIVATED_OPTIONS.map(option => option.label),
         });
         
         localStorage.setItem("motivated", JSON.stringify({ motivated }));
-        window.location.href = "/intake/additional_information";
+        router.push("/intake/additional_information");
     };
 
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -21,6 +22,7 @@ const PRIORITY_OPTIONS: PriorityOption[] = [
 const TITLE = "Which of these is your priority?";
 
 export default function PrioritiesPage() {
+    const router = useRouter();
     const [priority, setPriority] = useState<string | "">("");
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function PrioritiesPage() {
             answer: selectedPriority?.label ? [selectedPriority.label] : [],
             options: PRIORITY_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/magic";
+        router.push("/intake/magic");
     };
 
     return (

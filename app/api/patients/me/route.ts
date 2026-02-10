@@ -7,7 +7,7 @@ const SECRET_API_KEY = process.env.SECRET_API_KEY!;
 export async function POST(req: Request) {
   try {
     // Get body parameters
-    const { token, correlationId, city, address, state, zipCode, country, phoneNumber, firstName, lastName, sexAtBirth, dateOfBirth } = await req.json();
+    const { token, correlationId, city, address, state, zipCode, country, phoneNumber, firstName, lastName, sexAtBirth, dateOfBirth, height, weight, medications } = await req.json();
     
     // Validate token
     if (!token) {
@@ -32,7 +32,9 @@ export async function POST(req: Request) {
     if (dateOfBirth !== undefined) requestBody.dateOfBirth = dateOfBirth;
     if (phoneNumber !== undefined) requestBody.phoneNumber = phoneNumber;
     if (country !== undefined) requestBody.country = country;
-    
+    if (height !== undefined) requestBody.height = height;
+    if (weight !== undefined) requestBody.weight = weight;
+    if (medications !== undefined) requestBody.medications = medications;
     const res = await fetch(`${BASE_URL}${API_CONFIG.PATIENTS_Me}`, {
       method: 'PUT',
       headers: {

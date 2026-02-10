@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -20,6 +21,7 @@ const GENDER_OPTIONS: GenderOption[] = [
 const TITLE = "Are you male or female?";
 
 export default function GenderAgePage() {
+  const router = useRouter();
   const [gender, setGender] = useState<string | "">("");
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function GenderAgePage() {
       text: TITLE,
       answer: gender,
     });
-    window.location.href = "/intake/unique_effects";
+    router.push("/intake/unique_effects");
   };
 
   return (

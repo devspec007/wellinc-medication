@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import Select from "@/components/Select";
@@ -41,6 +42,7 @@ const OTHER_PROVIDER_DESCRIPTION_OPTIONS: OtherProviderDescriptionOption[] = [
 ];
 
 export default function DifferentMedicationPage() {
+    const router = useRouter();
     const [selectedDifferentMedication, setSelectedDifferentMedication] = useState<string | "">("");
     const [listOfMedications, setListOfMedications] = useState<string | "">("");
     const [otherProviderDescription, setOtherProviderDescription] = useState<string | "">("");
@@ -76,7 +78,7 @@ export default function DifferentMedicationPage() {
             return;
         }
         localStorage.setItem("different_medication", JSON.stringify({ different_medication: selectedDifferentMedication, list_of_medications: listOfMedications, other_provider_description: otherProviderDescription, selected_other_provider: selectedOtherProvider }));
-        window.location.href = "/intake/diet_exercise_willingness";
+        router.push("/intake/diet_exercise_willingness");
     };
     return (
         <div className="w-full">

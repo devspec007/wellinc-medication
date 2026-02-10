@@ -153,13 +153,13 @@ export async function getPatientData(token: string): Promise<{ patient?: any; er
   }
 }
 
-export async function answerQuestions(token: string, questions: any): Promise<{ success?: boolean; error?: any }> {
+export async function answerQuestions(token: string, questions: any, previousMedication?: any): Promise<{ success?: boolean; error?: any }> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/questions-answers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questions, correlationId, token })
+      body: JSON.stringify({ questions, correlationId, token, previousMedication })
     });
     if (res.status === 200) {
       return { success: true, error: null };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -19,6 +20,7 @@ const MOTIVATION_OPTIONS: MotivationOption[] = [
 ];
 
 export default function WhyPage() {
+    const router = useRouter();
     const [motivation, setMotivation] = useState<string | "">("");
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function WhyPage() {
             answer: selectedMotivation?.label ? [selectedMotivation.label] : [],
             options: MOTIVATION_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/speed";
+        router.push("/intake/speed");
     };
     return (
         <div className="w-full">

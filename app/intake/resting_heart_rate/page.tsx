@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import RadioCard from "@/components/RadioCard";
 import { updateQuestionnaire } from "@/lib/helper";
@@ -22,6 +23,7 @@ const RESTING_HEART_RATE_OPTIONS: RestingHeartRateOption[] = [
 const TITLE = "How about your average resting heart rate?";
 
 export default function RestingHeartRatePage() {
+    const router = useRouter();
     const [selectedRestingHeartRate, setSelectedRestingHeartRate] = useState<string | "">("");
 
     useEffect(() => {
@@ -37,14 +39,15 @@ export default function RestingHeartRatePage() {
             return;
         }
         localStorage.setItem("resting_heart_rate", JSON.stringify({ resting_heart_rate: selectedRestingHeartRate }));
+        const selectedOption = RESTING_HEART_RATE_OPTIONS.find(opt => opt.value === selectedRestingHeartRate);
         updateQuestionnaire({
             type: "multiple-choice",
             id: "q16",
             text: TITLE,
-            answer: selectedRestingHeartRate ? [selectedRestingHeartRate] : [],
+            answer: selectedOption ? [selectedOption.label] : [],
             options: RESTING_HEART_RATE_OPTIONS.map(option => option.label),
         });
-        window.location.href = "/intake/medication_match";
+        router.push("/intake/medication_match");
     };
     return (
         <div className="w-full">

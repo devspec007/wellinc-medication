@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SpeedGoodPage() {
+    const router = useRouter();
     const [speedDifference, setSpeedDifference] = useState<number | "">("");
 
     useEffect(() => {
@@ -15,7 +17,7 @@ export default function SpeedGoodPage() {
     }, []);
 
     const handleNext = () => {
-        window.location.href = "/intake/sleep";
+        router.push("/intake/sleep");
     };
 
     return (

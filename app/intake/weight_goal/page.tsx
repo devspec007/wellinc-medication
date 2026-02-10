@@ -2,11 +2,13 @@
 
 import { updateQuestionnaire } from "@/lib/helper";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
 const TITLE = "What is your goal weight (lbs)?";
 
 export default function WeightGoalPage() {
+  const router = useRouter();
   const [weightGoal, setWeightGoal] = useState<number | "">("");
   const [bmi, setBmi] = useState<string | "">("");
 
@@ -40,7 +42,7 @@ export default function WeightGoalPage() {
       text: TITLE,
       answer: weightGoal.toString(),
     });
-    window.location.href = "/intake/gender_age";
+    router.push("/intake/gender_age");
   };
 
   return (

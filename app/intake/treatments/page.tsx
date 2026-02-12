@@ -160,7 +160,6 @@ export default function TreatmentsPage() {
         let currentMedicationsRaw = JSON.parse(localStorage.getItem("current_medications") || "{}");
         let patientMedication = currentMedicationsRaw.current_medications_details;
         patientData.medications.push({ name: patientMedication });
-        console.log("currentMedications::Treatments::", patientMedication);
       }
 
 
@@ -170,7 +169,7 @@ export default function TreatmentsPage() {
         [patientData],
         { on404: () => router.push("/intake/medication_review"),
           onError: (error: any) => {
-            console.log(error);
+            console.error(error);
           }
         }
       );
@@ -240,7 +239,6 @@ export default function TreatmentsPage() {
         // Invalid JSON, ignore
       }
     }
-    console.log("previousMedication::", previousMedication);
     (async () => {
       const res = await withTokenRefresh(
         answerQuestions,

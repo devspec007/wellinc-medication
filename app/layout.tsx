@@ -47,28 +47,17 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                console.log("EF", EF);
-                console.log("EF.click", EF.click);
-                console.log("EF.urlParameter", EF.urlParameter);
-                console.log("EF.urlParameter('oid')", EF.urlParameter('oid'));
-                console.log("EF.urlParameter('pub')", EF.urlParameter('pub'));
-                console.log("EF.urlParameter('sub1')", EF.urlParameter('sub1'));
-                console.log("EF.urlParameter('sub2')", EF.urlParameter('sub2'));
-                console.log("EF.urlParameter('sub3')", EF.urlParameter('sub3'));
                 if (typeof EF !== 'undefined' && typeof EF.click === 'function') {
                   
                   // DEVELOPMENT MODE: Check for test transaction_id in URL
                   var testTid = EF.urlParameter('test_tid');
                   if (testTid) {
-                    console.log('[Everflow DEV MODE] Using test transaction_id:', testTid);
                     handleTransactionId({ transaction_id: testTid });
                     return; // Skip real Everflow call in test mode
                   }
                   
                   // Helper function to handle transaction_id
                   function handleTransactionId(response) {
-                    console.log('[Everflow] Processing response:', response);
-                    
                     // Handle both string and object responses
                     var transactionId;
                     if (typeof response === 'string') {
@@ -80,11 +69,8 @@ export default function RootLayout({
                     }
                     
                     if (transactionId) {
-                      console.log('[Everflow] Got transaction_id:', transactionId);
-                      
                       // Store in localStorage
                       localStorage.setItem('everflow_transaction_id', transactionId);
-                      console.log('[Everflow] Saved to localStorage');
                       
                       // Send to backend
                       fetch('/api/everflow/store-transaction-id', {
@@ -92,16 +78,9 @@ export default function RootLayout({
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ transaction_id: transactionId })
                       })
-                      .then(function(res) {
-                        if (res.ok) {
-                          console.log('[Everflow] Transaction ID stored successfully on backend');
-                        }
-                      })
                       .catch(function(err) {
                         console.error('[Everflow] Failed to store transaction_id on backend:', err);
                       });
-                    } else {
-                      console.warn('[Everflow] No transaction_id in response');
                     }
                   }
                   
@@ -117,20 +96,14 @@ export default function RootLayout({
                     transaction_id: EF.urlParameter('tid'),
                   }, handleTransactionId); // Try callback as second parameter
                   
-                  console.log('[Everflow] EF.click() called, result:', clickResult);
-                  
                   // Also handle as Promise in case callback doesn't work
                   if (clickResult && typeof clickResult.then === 'function') {
-                    console.log('[Everflow] EF.click() returned a Promise, waiting for response...');
                     clickResult.then(function(response) {
-                      console.log('[Everflow] Promise resolved with:', response);
                       handleTransactionId(response);
                     }).catch(function(err) {
                       console.error('[Everflow] Promise rejected:', err);
                     });
                   }
-                } else {
-                  console.warn('Everflow SDK not loaded or EF.click not available');
                 }
               })();
             `,

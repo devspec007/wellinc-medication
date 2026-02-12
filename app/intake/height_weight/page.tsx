@@ -28,7 +28,6 @@ export default function HeightWeightPage() {
         // Set flag immediately to prevent duplicate calls (React Strict Mode can run effects twice)
         localStorage.setItem("everflow_quiz_start_tracked", "true");
         
-        console.log('[Everflow] Firing Quiz Start postback with transaction_id:', transactionId);
         fetch("/api/everflow/postback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -38,9 +37,7 @@ export default function HeightWeightPage() {
           }),
         })
         .then((res) => {
-          if (res.ok) {
-            console.log('[Everflow] Quiz Start postback sent successfully');
-          } else {
+          if (!res.ok) {
             console.error('[Everflow] Quiz Start postback failed:', res.status);
             // If it failed, remove the flag so it can retry on next page load
             localStorage.removeItem("everflow_quiz_start_tracked");
@@ -51,8 +48,6 @@ export default function HeightWeightPage() {
           // If it failed, remove the flag so it can retry on next page load
           localStorage.removeItem("everflow_quiz_start_tracked");
         });
-      } else {
-        console.log('[Everflow] No transaction_id - user did not come from Everflow link');
       }
     }
   }, []);
@@ -81,7 +76,6 @@ export default function HeightWeightPage() {
     // Fire BMI postback
     const transactionId = getEverflowTransactionId();
     if (transactionId) {
-      console.log('[Everflow] Firing BMI postback with transaction_id:', transactionId);
       fetch("/api/everflow/postback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -91,9 +85,7 @@ export default function HeightWeightPage() {
         }),
       })
       .then((res) => {
-        if (res.ok) {
-          console.log('[Everflow] BMI postback sent successfully');
-        } else {
+        if (!res.ok) {
           console.error('[Everflow] BMI postback failed:', res.status);
         }
       })

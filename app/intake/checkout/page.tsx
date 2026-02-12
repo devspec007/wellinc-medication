@@ -9,6 +9,7 @@ import "react-phone-input-2/lib/style.css";
 import { getPlanColors, isValidPhone } from "@/lib/helper";
 import { withTokenRefresh, getPatientData, initiateCheckout, updatePatient } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { getEverflowTransactionId } from "@/lib/everflow";
 
 // Get all countries and sort alphabetically
 const COUNTRIES = Country.getAllCountries().sort((a, b) =>
@@ -305,6 +306,44 @@ export default function CheckoutPage() {
     }
 
     if (!initiateCheckoutData?.error) {
+      // Fire Add to Cart postback
+      const transactionId = getEverflowTransactionId();
+      if (transactionId) {
+        console.log('[Everflow] Firing Add to Cart postback with transaction_id:', transactionId);
+        // Get patient data for postback
+        const patientData = await withTokenRefresh(
+          getPatientData,
+          token,
+          [],
+          { on404: () => {} }
+        );
+        
+        if (patientData && !patientData?.error) {
+          const patient = patientData.patient;
+          fetch("/api/everflow/postback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event_type: "add_to_cart",
+              transaction_id: transactionId,
+              user_id: patient?.id || patient?.patientId || undefined,
+              email: patient?.email || undefined,
+              firstName: patient?.firstName || undefined,
+              lastName: patient?.lastName || undefined,
+              phone: patient?.phoneNumber || undefined,
+            }),
+          })
+          .then((res) => {
+            if (res.ok) {
+              console.log('[Everflow] Add to Cart postback sent successfully');
+            } else {
+              console.error('[Everflow] Add to Cart postback failed:', res.status);
+            }
+          })
+          .catch((err) => console.error("[Everflow] Failed to fire add to cart postback:", err));
+        }
+      }
+      
       return initiateCheckoutData.data;
     }
 
@@ -556,6 +595,59 @@ export default function CheckoutPage() {
     }
   }
 
+  const firePurchasePostback = async (paymentIntentId?: string) => {
+    const transactionId = getEverflowTransactionId();
+    if (!transactionId) {
+      console.log('[Everflow] No transaction_id - user did not come from Everflow link');
+      return;
+    }
+    
+    console.log('[Everflow] Firing Purchase postback with transaction_id:', transactionId);
+    
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    
+    try {
+      // Get patient data and order information
+      const patientData = await withTokenRefresh(
+        getPatientData,
+        token,
+        [],
+        { on404: () => {} }
+      );
+      
+      if (patientData && !patientData?.error) {
+        const patient = patientData.patient;
+        const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
+        
+        fetch("/api/everflow/postback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event_type: "purchase",
+            transaction_id: transactionId,
+            amount: selectedProduct?.totalPrice || selectedProduct?.monthlyPrice || undefined,
+            order_id: paymentIntentId || clientSecretRef.current || undefined,
+            email: patient?.email || undefined,
+            firstName: patient?.firstName || undefined,
+            lastName: patient?.lastName || undefined,
+            phone: patient?.phoneNumber || undefined,
+          }),
+        })
+        .then((res) => {
+          if (res.ok) {
+            console.log('[Everflow] Purchase postback sent successfully');
+          } else {
+            console.error('[Everflow] Purchase postback failed:', res.status);
+          }
+        })
+        .catch((err) => console.error("[Everflow] Failed to fire purchase postback:", err));
+      }
+    } catch (error) {
+      console.error("[Everflow] Error firing purchase postback:", error);
+    }
+  };
+
   const confirmPayment = async () => {
     if (baskElementsRef.current == null) {
       toast.error("No payment elements found. Please submit your shipping address first.");
@@ -580,6 +672,9 @@ export default function CheckoutPage() {
 
         // If payment is already authorized (requires_capture) or succeeded, redirect to success
         if (paymentIntent.status === "requires_capture" || paymentIntent.status === "succeeded") {
+          // Fire Purchase postback
+          await firePurchasePostback(paymentIntent.id);
+          
           toast.success("Payment authorized successfully!");
           localStorage.clear();
           router.push("/intake/checkout/success");
@@ -610,6 +705,12 @@ export default function CheckoutPage() {
         if ((errorResult.error.type === "invalid_request" || errorResult.error.code === "invalid_request") &&
           errorMessage.includes("requires_capture")) {
           // Payment was already authorized, this is actually a success
+          // Fire Purchase postback
+          const paymentIntentId = clientSecretRef.current ? 
+            (await baskPaymentRef.current.retrievePaymentIntent(clientSecretRef.current).catch(() => null))?.id : 
+            undefined;
+          await firePurchasePostback(paymentIntentId);
+          
           toast.success("Payment authorized successfully!");
           localStorage.clear()
           router.push("/intake/checkout/success");
@@ -618,8 +719,15 @@ export default function CheckoutPage() {
         }
       } else if (result && 'status' in result) {
         // Handle PaymentConfirmResponse
-        const paymentResult = result as { status: string };
+        const paymentResult = result as { status: string; paymentIntent?: { id?: string } };
         if (paymentResult.status === "succeeded" || paymentResult.status === "requires_capture") {
+          // Fire Purchase postback
+          const paymentIntentId = paymentResult.paymentIntent?.id || 
+            (clientSecretRef.current ? 
+              (await baskPaymentRef.current.retrievePaymentIntent(clientSecretRef.current).catch(() => null))?.id : 
+              undefined);
+          await firePurchasePostback(paymentIntentId);
+          
           toast.success("Payment authorized successfully!");
           localStorage.clear()
           router.push("/intake/checkout/success");

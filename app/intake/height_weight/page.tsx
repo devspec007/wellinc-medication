@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { updateQuestionnaire } from "@/lib/helper";
+import { getEverflowTransactionId } from "@/lib/everflow";
 
 const TITLE = "What is your height and weight?";
 
@@ -18,6 +19,42 @@ export default function HeightWeightPage() {
     setFeet(data.feet || "");
     setInches(data.inches || "");
     setWeight(data.weight || "");
+    
+    // Fire Quiz Start postback if this is the first time entering the intake flow
+    const hasTrackedQuizStart = localStorage.getItem("everflow_quiz_start_tracked");
+    if (!hasTrackedQuizStart) {
+      const transactionId = getEverflowTransactionId();
+      if (transactionId) {
+        // Set flag immediately to prevent duplicate calls (React Strict Mode can run effects twice)
+        localStorage.setItem("everflow_quiz_start_tracked", "true");
+        
+        console.log('[Everflow] Firing Quiz Start postback with transaction_id:', transactionId);
+        fetch("/api/everflow/postback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event_type: "quiz_start",
+            transaction_id: transactionId,
+          }),
+        })
+        .then((res) => {
+          if (res.ok) {
+            console.log('[Everflow] Quiz Start postback sent successfully');
+          } else {
+            console.error('[Everflow] Quiz Start postback failed:', res.status);
+            // If it failed, remove the flag so it can retry on next page load
+            localStorage.removeItem("everflow_quiz_start_tracked");
+          }
+        })
+        .catch((err) => {
+          console.error("[Everflow] Failed to fire quiz start postback:", err);
+          // If it failed, remove the flag so it can retry on next page load
+          localStorage.removeItem("everflow_quiz_start_tracked");
+        });
+      } else {
+        console.log('[Everflow] No transaction_id - user did not come from Everflow link');
+      }
+    }
   }, []);
 
   const handleNext = () => {
@@ -40,6 +77,29 @@ export default function HeightWeightPage() {
     });
     
     const bmi = (weight / ((feet * 12 + inches) ** 2)) * 703;
+    
+    // Fire BMI postback
+    const transactionId = getEverflowTransactionId();
+    if (transactionId) {
+      console.log('[Everflow] Firing BMI postback with transaction_id:', transactionId);
+      fetch("/api/everflow/postback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event_type: "bmi",
+          transaction_id: transactionId,
+        }),
+      })
+      .then((res) => {
+        if (res.ok) {
+          console.log('[Everflow] BMI postback sent successfully');
+        } else {
+          console.error('[Everflow] BMI postback failed:', res.status);
+        }
+      })
+      .catch((err) => console.error("[Everflow] Failed to fire BMI postback:", err));
+    }
+    
     if (bmi < 27) {
       router.push("/intake/not_qualified_bmi");
     } else {

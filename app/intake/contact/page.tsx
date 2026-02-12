@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 
 import { isValidEmail, isValidPhone } from '@/lib/helper';
 import { initSession, signup, sendOtp, getPatientBasic } from '@/lib/api';
+import { getEverflowTransactionId } from '@/lib/everflow';
 
 export default function ContactPage() {
     const [email, setEmail] = useState("");
@@ -75,6 +76,33 @@ export default function ContactPage() {
                             if (res.token) {
                                 localStorage.setItem("token", res.token);
                                 toast.success("Sign up successful!");
+                                
+                                // Fire Lead postback
+                                const transactionId = getEverflowTransactionId();
+                                if (transactionId) {
+                                    console.log('[Everflow] Firing Lead postback with transaction_id:', transactionId);
+                                    fetch("/api/everflow/postback", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            event_type: "lead",
+                                            transaction_id: transactionId,
+                                            email: email,
+                                            firstName: firstName,
+                                            lastName: lastName,
+                                            phone: phone,
+                                        }),
+                                    })
+                                    .then((res) => {
+                                        if (res.ok) {
+                                            console.log('[Everflow] Lead postback sent successfully');
+                                        } else {
+                                            console.error('[Everflow] Lead postback failed:', res.status);
+                                        }
+                                    })
+                                    .catch((err) => console.error("[Everflow] Failed to fire lead postback:", err));
+                                }
+                                
                                 router.push("/intake/treatments");
                             }
                         });
@@ -85,6 +113,33 @@ export default function ContactPage() {
                                 toast.error(otpRes.error);
                             } else {
                                 toast.success("OTP sent successfully!");
+                                
+                                // Fire Lead postback (for returning users)
+                                const transactionIdLogin = getEverflowTransactionId();
+                                if (transactionIdLogin) {
+                                    console.log('[Everflow] Firing Lead postback (returning user) with transaction_id:', transactionIdLogin);
+                                    fetch("/api/everflow/postback", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            event_type: "lead",
+                                            transaction_id: transactionIdLogin,
+                                            email: email,
+                                            firstName: firstName,
+                                            lastName: lastName,
+                                            phone: phone,
+                                        }),
+                                    })
+                                    .then((res) => {
+                                        if (res.ok) {
+                                            console.log('[Everflow] Lead postback sent successfully');
+                                        } else {
+                                            console.error('[Everflow] Lead postback failed:', res.status);
+                                        }
+                                    })
+                                    .catch((err) => console.error("[Everflow] Failed to fire lead postback:", err));
+                                }
+                                
                                 router.push("/intake/otp");
                             }
                         });

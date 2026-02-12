@@ -306,38 +306,53 @@ export default function CheckoutPage() {
     }
 
     if (!initiateCheckoutData?.error) {
-      // Fire Add to Cart postback
+      // Fire Add to Cart postback (only once per transaction_id)
       const transactionId = getEverflowTransactionId();
       if (transactionId) {
-        // Get patient data for postback
-        const patientData = await withTokenRefresh(
-          getPatientData,
-          token,
-          [],
-          { on404: () => {} }
-        );
-        
-        if (patientData && !patientData?.error) {
-          const patient = patientData.patient;
-          fetch("/api/everflow/postback", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              event_type: "add_to_cart",
-              transaction_id: transactionId,
-              user_id: patient?.id || patient?.patientId || undefined,
-              email: patient?.email || undefined,
-              firstName: patient?.firstName || undefined,
-              lastName: patient?.lastName || undefined,
-              phone: patient?.phoneNumber || undefined,
-            }),
-          })
-          .then((res) => {
-            if (!res.ok) {
-              console.error('[Everflow] Add to Cart postback failed:', res.status);
-            }
-          })
-          .catch((err) => console.error("[Everflow] Failed to fire add to cart postback:", err));
+        const hasTrackedAddToCart = localStorage.getItem("everflow_add_to_cart_tracked");
+        if (!hasTrackedAddToCart) {
+          // Set flag immediately to prevent duplicate calls
+          localStorage.setItem("everflow_add_to_cart_tracked", "true");
+          
+          // Get patient data for postback
+          const patientData = await withTokenRefresh(
+            getPatientData,
+            token,
+            [],
+            { on404: () => {} }
+          );
+          
+          if (patientData && !patientData?.error) {
+            const patient = patientData.patient;
+            fetch("/api/everflow/postback", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                event_type: "add_to_cart",
+                transaction_id: transactionId,
+                user_id: patient?.id || patient?.patientId || undefined,
+                email: patient?.email || undefined,
+                firstName: patient?.firstName || undefined,
+                lastName: patient?.lastName || undefined,
+                phone: patient?.phoneNumber || undefined,
+              }),
+            })
+            .then((res) => {
+              if (!res.ok) {
+                console.error('[Everflow] Add to Cart postback failed:', res.status);
+                // If it failed, remove the flag so it can retry
+                localStorage.removeItem("everflow_add_to_cart_tracked");
+              }
+            })
+            .catch((err) => {
+              console.error("[Everflow] Failed to fire add to cart postback:", err);
+              // If it failed, remove the flag so it can retry
+              localStorage.removeItem("everflow_add_to_cart_tracked");
+            });
+          } else {
+            // If patient data fetch failed, remove flag to allow retry
+            localStorage.removeItem("everflow_add_to_cart_tracked");
+          }
         }
       }
       
@@ -601,6 +616,23 @@ export default function CheckoutPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
     
+    // Use order_id as key to prevent duplicate purchases for the same order
+    const orderId = paymentIntentId || clientSecretRef.current;
+    if (!orderId) {
+      console.error("[Everflow] Cannot track purchase: missing order_id");
+      return;
+    }
+    
+    // Check if this order has already been tracked
+    const purchaseKey = `everflow_purchase_${orderId}`;
+    const hasTrackedPurchase = localStorage.getItem(purchaseKey);
+    if (hasTrackedPurchase) {
+      return; // Already tracked this order
+    }
+    
+    // Set flag immediately to prevent duplicate calls
+    localStorage.setItem(purchaseKey, "true");
+    
     try {
       // Get patient data and order information
       const patientData = await withTokenRefresh(
@@ -621,7 +653,7 @@ export default function CheckoutPage() {
             event_type: "purchase",
             transaction_id: transactionId,
             amount: selectedProduct?.totalPrice || selectedProduct?.monthlyPrice || undefined,
-            order_id: paymentIntentId || clientSecretRef.current || undefined,
+            order_id: orderId,
             email: patient?.email || undefined,
             firstName: patient?.firstName || undefined,
             lastName: patient?.lastName || undefined,
@@ -631,12 +663,23 @@ export default function CheckoutPage() {
         .then((res) => {
           if (!res.ok) {
             console.error('[Everflow] Purchase postback failed:', res.status);
+            // If it failed, remove the flag so it can retry
+            localStorage.removeItem(purchaseKey);
           }
         })
-        .catch((err) => console.error("[Everflow] Failed to fire purchase postback:", err));
+        .catch((err) => {
+          console.error("[Everflow] Failed to fire purchase postback:", err);
+          // If it failed, remove the flag so it can retry
+          localStorage.removeItem(purchaseKey);
+        });
+      } else {
+        // If patient data fetch failed, remove flag to allow retry
+        localStorage.removeItem(purchaseKey);
       }
     } catch (error) {
       console.error("[Everflow] Error firing purchase postback:", error);
+      // If error occurred, remove flag to allow retry
+      localStorage.removeItem(purchaseKey);
     }
   };
 

@@ -77,27 +77,39 @@ export default function ContactPage() {
                                 localStorage.setItem("token", res.token);
                                 toast.success("Sign up successful!");
                                 
-                                // Fire Lead postback
+                                // Fire Lead postback (only once per transaction_id)
                                 const transactionId = getEverflowTransactionId();
                                 if (transactionId) {
-                                    fetch("/api/everflow/postback", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({
-                                            event_type: "lead",
-                                            transaction_id: transactionId,
-                                            email: email,
-                                            firstName: firstName,
-                                            lastName: lastName,
-                                            phone: phone,
-                                        }),
-                                    })
-                                    .then((res) => {
-                                        if (!res.ok) {
-                                            console.error('[Everflow] Lead postback failed:', res.status);
-                                        }
-                                    })
-                                    .catch((err) => console.error("[Everflow] Failed to fire lead postback:", err));
+                                    const hasTrackedLead = localStorage.getItem("everflow_lead_tracked");
+                                    if (!hasTrackedLead) {
+                                        // Set flag immediately to prevent duplicate calls
+                                        localStorage.setItem("everflow_lead_tracked", "true");
+                                        
+                                        fetch("/api/everflow/postback", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({
+                                                event_type: "lead",
+                                                transaction_id: transactionId,
+                                                email: email,
+                                                firstName: firstName,
+                                                lastName: lastName,
+                                                phone: phone,
+                                            }),
+                                        })
+                                        .then((res) => {
+                                            if (!res.ok) {
+                                                console.error('[Everflow] Lead postback failed:', res.status);
+                                                // If it failed, remove the flag so it can retry
+                                                localStorage.removeItem("everflow_lead_tracked");
+                                            }
+                                        })
+                                        .catch((err) => {
+                                            console.error("[Everflow] Failed to fire lead postback:", err);
+                                            // If it failed, remove the flag so it can retry
+                                            localStorage.removeItem("everflow_lead_tracked");
+                                        });
+                                    }
                                 }
                                 
                                 router.push("/intake/treatments");
@@ -111,27 +123,39 @@ export default function ContactPage() {
                             } else {
                                 toast.success("OTP sent successfully!");
                                 
-                                // Fire Lead postback (for returning users)
+                                // Fire Lead postback (for returning users, only once per transaction_id)
                                 const transactionIdLogin = getEverflowTransactionId();
                                 if (transactionIdLogin) {
-                                    fetch("/api/everflow/postback", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({
-                                            event_type: "lead",
-                                            transaction_id: transactionIdLogin,
-                                            email: email,
-                                            firstName: firstName,
-                                            lastName: lastName,
-                                            phone: phone,
-                                        }),
-                                    })
-                                    .then((res) => {
-                                        if (!res.ok) {
-                                            console.error('[Everflow] Lead postback failed:', res.status);
-                                        }
-                                    })
-                                    .catch((err) => console.error("[Everflow] Failed to fire lead postback:", err));
+                                    const hasTrackedLead = localStorage.getItem("everflow_lead_tracked");
+                                    if (!hasTrackedLead) {
+                                        // Set flag immediately to prevent duplicate calls
+                                        localStorage.setItem("everflow_lead_tracked", "true");
+                                        
+                                        fetch("/api/everflow/postback", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({
+                                                event_type: "lead",
+                                                transaction_id: transactionIdLogin,
+                                                email: email,
+                                                firstName: firstName,
+                                                lastName: lastName,
+                                                phone: phone,
+                                            }),
+                                        })
+                                        .then((res) => {
+                                            if (!res.ok) {
+                                                console.error('[Everflow] Lead postback failed:', res.status);
+                                                // If it failed, remove the flag so it can retry
+                                                localStorage.removeItem("everflow_lead_tracked");
+                                            }
+                                        })
+                                        .catch((err) => {
+                                            console.error("[Everflow] Failed to fire lead postback:", err);
+                                            // If it failed, remove the flag so it can retry
+                                            localStorage.removeItem("everflow_lead_tracked");
+                                        });
+                                    }
                                 }
                                 
                                 router.push("/intake/otp");

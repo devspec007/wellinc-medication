@@ -73,23 +73,35 @@ export default function HeightWeightPage() {
     
     const bmi = (weight / ((feet * 12 + inches) ** 2)) * 703;
     
-    // Fire BMI postback
+    // Fire BMI postback (only once per transaction_id)
     const transactionId = getEverflowTransactionId();
     if (transactionId) {
-      fetch("/api/everflow/postback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event_type: "bmi",
-          transaction_id: transactionId,
-        }),
-      })
-      .then((res) => {
-        if (!res.ok) {
-          console.error('[Everflow] BMI postback failed:', res.status);
-        }
-      })
-      .catch((err) => console.error("[Everflow] Failed to fire BMI postback:", err));
+      const hasTrackedBMI = localStorage.getItem("everflow_bmi_tracked");
+      if (!hasTrackedBMI) {
+        // Set flag immediately to prevent duplicate calls
+        localStorage.setItem("everflow_bmi_tracked", "true");
+        
+        fetch("/api/everflow/postback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event_type: "bmi",
+            transaction_id: transactionId,
+          }),
+        })
+        .then((res) => {
+          if (!res.ok) {
+            console.error('[Everflow] BMI postback failed:', res.status);
+            // If it failed, remove the flag so it can retry on next submission
+            localStorage.removeItem("everflow_bmi_tracked");
+          }
+        })
+        .catch((err) => {
+          console.error("[Everflow] Failed to fire BMI postback:", err);
+          // If it failed, remove the flag so it can retry on next submission
+          localStorage.removeItem("everflow_bmi_tracked");
+        });
+      }
     }
     
     if (bmi < 27) {

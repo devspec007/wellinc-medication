@@ -80,7 +80,6 @@ export default function ContactPage() {
                                 // Fire Lead postback
                                 const transactionId = getEverflowTransactionId();
                                 if (transactionId) {
-                                    console.log('[Everflow] Firing Lead postback with transaction_id:', transactionId);
                                     fetch("/api/everflow/postback", {
                                         method: "POST",
                                         headers: { "Content-Type": "application/json" },
@@ -94,9 +93,7 @@ export default function ContactPage() {
                                         }),
                                     })
                                     .then((res) => {
-                                        if (res.ok) {
-                                            console.log('[Everflow] Lead postback sent successfully');
-                                        } else {
+                                        if (!res.ok) {
                                             console.error('[Everflow] Lead postback failed:', res.status);
                                         }
                                     })
@@ -117,7 +114,6 @@ export default function ContactPage() {
                                 // Fire Lead postback (for returning users)
                                 const transactionIdLogin = getEverflowTransactionId();
                                 if (transactionIdLogin) {
-                                    console.log('[Everflow] Firing Lead postback (returning user) with transaction_id:', transactionIdLogin);
                                     fetch("/api/everflow/postback", {
                                         method: "POST",
                                         headers: { "Content-Type": "application/json" },
@@ -131,9 +127,7 @@ export default function ContactPage() {
                                         }),
                                     })
                                     .then((res) => {
-                                        if (res.ok) {
-                                            console.log('[Everflow] Lead postback sent successfully');
-                                        } else {
+                                        if (!res.ok) {
                                             console.error('[Everflow] Lead postback failed:', res.status);
                                         }
                                     })

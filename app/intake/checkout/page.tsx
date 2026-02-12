@@ -309,7 +309,6 @@ export default function CheckoutPage() {
       // Fire Add to Cart postback
       const transactionId = getEverflowTransactionId();
       if (transactionId) {
-        console.log('[Everflow] Firing Add to Cart postback with transaction_id:', transactionId);
         // Get patient data for postback
         const patientData = await withTokenRefresh(
           getPatientData,
@@ -334,9 +333,7 @@ export default function CheckoutPage() {
             }),
           })
           .then((res) => {
-            if (res.ok) {
-              console.log('[Everflow] Add to Cart postback sent successfully');
-            } else {
+            if (!res.ok) {
               console.error('[Everflow] Add to Cart postback failed:', res.status);
             }
           })
@@ -598,11 +595,8 @@ export default function CheckoutPage() {
   const firePurchasePostback = async (paymentIntentId?: string) => {
     const transactionId = getEverflowTransactionId();
     if (!transactionId) {
-      console.log('[Everflow] No transaction_id - user did not come from Everflow link');
       return;
     }
-    
-    console.log('[Everflow] Firing Purchase postback with transaction_id:', transactionId);
     
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -635,9 +629,7 @@ export default function CheckoutPage() {
           }),
         })
         .then((res) => {
-          if (res.ok) {
-            console.log('[Everflow] Purchase postback sent successfully');
-          } else {
+          if (!res.ok) {
             console.error('[Everflow] Purchase postback failed:', res.status);
           }
         })
@@ -687,7 +679,7 @@ export default function CheckoutPage() {
           return;
         }
       } catch (error: any) {
-        console.log("Could not retrieve payment intent, proceeding with confirmation:", error);
+        // Payment intent retrieval failed, proceeding with confirmation
       }
     }
 

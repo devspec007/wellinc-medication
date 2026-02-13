@@ -10,6 +10,7 @@ import { getPlanColors, isValidPhone } from "@/lib/helper";
 import { withTokenRefresh, getPatientData, initiateCheckout, updatePatient } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { getEverflowTransactionId } from "@/lib/everflow";
+import { trackViewContent, trackPurchase } from "@/lib/facebook-pixel";
 
 // Get all countries and sort alphabetically
 const COUNTRIES = Country.getAllCountries().sort((a, b) =>
@@ -51,6 +52,16 @@ export default function CheckoutPage() {
   useEffect(() => {
     const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
     setSelectedProduct(selectedProduct);
+    
+    // Track ViewContent event for Facebook Pixel
+    if (selectedProduct) {
+      trackViewContent({
+        content_name: selectedProduct?.name || 'Checkout Page',
+        content_category: 'Medication',
+        value: selectedProduct?.totalPrice || selectedProduct?.monthlyPrice || 0,
+        currency: 'USD',
+      });
+    }
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -646,6 +657,7 @@ export default function CheckoutPage() {
         const patient = patientData.patient;
         const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
         
+        // Fire Everflow Purchase postback
         fetch("/api/everflow/postback", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -671,6 +683,13 @@ export default function CheckoutPage() {
           console.error("[Everflow] Failed to fire purchase postback:", err);
           // If it failed, remove the flag so it can retry
           localStorage.removeItem(purchaseKey);
+        });
+        
+        // Track Facebook Pixel Purchase event
+        trackPurchase({
+          value: selectedProduct?.totalPrice || selectedProduct?.monthlyPrice || 0,
+          currency: 'USD',
+          content_name: selectedProduct?.name || 'Medication Purchase',
         });
       } else {
         // If patient data fetch failed, remove flag to allow retry

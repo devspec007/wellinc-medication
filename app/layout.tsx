@@ -37,10 +37,61 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // GTM Container ID
+  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || 'GTM-MQPC44B2';
+  
   return (
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+        
+        {/* Google Tag Manager */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer','${GTM_ID}');
+            `,
+          }}
+        />
+        
+        {/* Facebook Pixel - Dynamic based on sub5 parameter */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              
+              // Get FB Pixel ID from sub5 parameter
+              var urlParams = new URLSearchParams(window.location.search);
+              var fbPixelId = urlParams.get('sub5');
+              
+              if (fbPixelId) {
+                // Store FB Pixel ID in localStorage for future page views
+                localStorage.setItem('fb_pixel_id', fbPixelId);
+                fbq('init', fbPixelId);
+                fbq('track', 'PageView');
+              } else {
+                // Check if we have a stored FB Pixel ID from previous visit
+                var storedPixelId = localStorage.getItem('fb_pixel_id');
+                if (storedPixelId) {
+                  fbq('init', storedPixelId);
+                  fbq('track', 'PageView');
+                }
+              }
+            `,
+          }}
+        />
+        
         <script type="text/javascript" src="https://www.qt3fqt8trk.com/scripts/main.js"></script>
         <script
           type="text/javascript"
@@ -113,6 +164,16 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${pacifico.variable} ${poppins.variable} antialiased`}
       >
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
+        
         <Toaster position="top-center" reverseOrder={false} />
         {children}
       </body>

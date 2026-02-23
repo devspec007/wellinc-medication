@@ -371,7 +371,6 @@ export default function CheckoutPage() {
     }
 
     if (initiateCheckoutData?.error == 409) {
-      localStorage.clear();
       router.push("/intake/checkout/success");
       return null;
     }
@@ -730,7 +729,6 @@ export default function CheckoutPage() {
           await firePurchasePostback(paymentIntent.id);
           
           toast.success("Payment authorized successfully!");
-          localStorage.clear();
           router.push("/intake/checkout/success");
           return;
         }
@@ -766,7 +764,6 @@ export default function CheckoutPage() {
           await firePurchasePostback(paymentIntentId);
           
           toast.success("Payment authorized successfully!");
-          localStorage.clear()
           router.push("/intake/checkout/success");
         } else {
           toast.error(errorMessage);
@@ -783,7 +780,6 @@ export default function CheckoutPage() {
           await firePurchasePostback(paymentIntentId);
           
           toast.success("Payment authorized successfully!");
-          localStorage.clear()
           router.push("/intake/checkout/success");
         } else if (paymentResult.status === "failed") {
           toast.error("Payment failed.");

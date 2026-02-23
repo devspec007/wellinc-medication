@@ -319,3 +319,21 @@ export async function updatePatient(token: string, body: any): Promise<{ data?: 
     return { error: error.message || "Network error." };
   }
 }
+
+export async function verifyIdentity(token: string, ssn: string): Promise<{ data?: any; error?: string }> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/patients/verify-identity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ssn, correlationId, token })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { error: data.error || "Failed to verify identity." };
+    }
+    return { data };
+  } catch (error: any) {
+    return { error: error.message || "Network error." };
+  }
+}

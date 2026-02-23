@@ -160,6 +160,8 @@ export default function TreatmentsPage() {
         let currentMedicationsRaw = JSON.parse(localStorage.getItem("current_medications") || "{}");
         let patientMedication = currentMedicationsRaw.current_medications_details;
         patientData.medications.push({ name: patientMedication });
+      } else {
+        patientData.medications.push({ name: "None" });
       }
 
 

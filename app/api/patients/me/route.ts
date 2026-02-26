@@ -37,8 +37,8 @@ export async function POST(req: Request) {
     if (medications !== undefined) requestBody.medications = medications;
     
     //Add None instead of empty object
-    requestBody.allergies = "None";
-    requestBody.medicalConditions = "None";
+    requestBody.allergies = ["None"];
+    requestBody.medicalConditions = ["None"];
     // Test Patient Put Data
     // console.log("Patient Put Data::requestBody::", requestBody);
 

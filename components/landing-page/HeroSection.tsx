@@ -65,7 +65,7 @@ export default function HeroSection() {
 
               <p className="mb-8 text-gray-800 max-w-xl">
                 For as low as <span className="text-[1.2rem]"><strong>$155/mo</strong></span> for{' '}
-                <strong>Semaglutide</strong> (Ozempic®) & <span className="text-[1.2rem]"><strong>$225/mo</strong></span> for <strong>Tirzepatide</strong> (Mounjaro®) when annual discount is applied.
+                <strong>Semaglutide</strong> & <span className="text-[1.2rem]"><strong>$225/mo</strong></span> for <strong>Tirzepatide</strong> when annual discount is applied.
               </p>
 
               {/* Feature List */}

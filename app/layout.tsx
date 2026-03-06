@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Pacifico, Poppins } from "next/font/google";
 import "./globals.css";
 import Logo from "@/components/Logo";
-import { Suspense } from "react";
-import ContentSquareTracker from "@/components/ContentSquareTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -177,9 +175,6 @@ export default function RootLayout({
           />
         </noscript>
         
-        <Suspense fallback={null}>
-          <ContentSquareTracker />
-        </Suspense>
         <Toaster position="top-center" reverseOrder={false} />
         {children}
       </body>

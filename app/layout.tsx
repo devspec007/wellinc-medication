@@ -91,7 +91,8 @@ export default function RootLayout({
             `,
           }}
         />
-        
+        {/* Contentsquare script */}
+        <script type="text/javascript" src="https://t.contentsquare.net/uxa/e4166dd225230.js"></script>
         <script type="text/javascript" src="https://www.qt3fqt8trk.com/scripts/main.js"></script>
         <script
           type="text/javascript"

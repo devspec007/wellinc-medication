@@ -93,6 +93,19 @@ export default function RootLayout({
         />
         {/* Contentsquare script */}
         <script type="text/javascript" src="https://t.contentsquare.net/uxa/e4166dd225230.js"></script>
+        {/* Microsoft Clarity */}
+        <script
+          type="text/javascript"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(c,l,a,r,i,t,y){
+                  c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                  t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                  y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "vwpoym4tmc");
+            `,
+          }}
+        />
         <script type="text/javascript" src="https://www.qt3fqt8trk.com/scripts/main.js"></script>
         <script
           type="text/javascript"

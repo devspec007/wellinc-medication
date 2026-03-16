@@ -131,6 +131,85 @@ export async function getPatientBasic({ email }: { email: string }): Promise<{ p
   }
 }
 
+// --- Token Refresh Wrapper ---
+/**
+ * Wrapper function that automatically handles token refresh on 401 errors.
+ * 
+ * @param apiCall - The API function to call (must accept token as first parameter)
+ * @param token - The current authentication token
+ * @param args - Additional arguments to pass to the API function (after token)
+ * @param options - Optional configuration for error handling
+ * @returns The result from the API call, or null if error handling redirects
+ * 
+ * @example
+ * const result = await withTokenRefresh(
+ *   getPatientData,
+ *   token,
+ *   [],
+ *   { on404: () => router.push("/intake/contact") }
+ * );
+ */
+export async function withTokenRefresh<T extends (...args: any[]) => Promise<any>>(
+  apiCall: T,
+  token: string,
+  args: Parameters<T> extends [string, ...infer Rest] ? Rest : never[] = [] as any,
+  options?: {
+    on404?: () => void | Promise<void>;
+    onError?: (error: any) => void | Promise<void>;
+    getToken?: () => string | null;
+    setToken?: (newToken: string) => void;
+  }
+): Promise<ReturnType<T> | null> {
+  const getToken = options?.getToken || (() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("token");
+    }
+    return null;
+  });
+  
+  const setToken = options?.setToken || ((newToken: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("token", newToken);
+    }
+  });
+
+  // First attempt with current token
+  const result = await apiCall(token, ...args) as Awaited<ReturnType<T>>;
+
+  // Check if we got a 401 error
+  if (result && typeof result === 'object' && 'error' in result && result.error === 401) {
+    // Try to refresh the token
+    const newTokenDataRes = await getNewToken(token);
+    
+    if (newTokenDataRes?.newToken) {
+      // Update token in storage
+      setToken(newTokenDataRes.newToken);
+      
+      // Retry the API call with new token
+      const retryResult = await apiCall(newTokenDataRes.newToken, ...args) as Awaited<ReturnType<T>>;
+      return retryResult;
+    }
+
+    // Handle 401/404 from token refresh (expired, not found, or invalid) → redirect to contact to re-login
+    if (newTokenDataRes?.status === 401 || newTokenDataRes?.status === 404) {
+      if (options?.on404) {
+        await options.on404();
+        localStorage.setItem("token", "");
+      }
+      return null;
+    }
+
+    // Handle other token refresh errors
+    if (options?.onError) {
+      await options.onError(newTokenDataRes);
+      localStorage.setItem("token", "");
+    }
+    return null;
+  }
+
+  return result;
+}
+
 // API Using Token
 export async function getPatientData(token: string): Promise<{ patient?: any; error?: any }> {
   try {
@@ -205,83 +284,6 @@ export async function getNewToken(token: string): Promise<{ newToken?: string; s
   } catch (error: any) {
     return { status: 500 };
   }
-}
-
-// --- Token Refresh Wrapper ---
-/**
- * Wrapper function that automatically handles token refresh on 401 errors.
- * 
- * @param apiCall - The API function to call (must accept token as first parameter)
- * @param token - The current authentication token
- * @param args - Additional arguments to pass to the API function (after token)
- * @param options - Optional configuration for error handling
- * @returns The result from the API call, or null if error handling redirects
- * 
- * @example
- * const result = await withTokenRefresh(
- *   getPatientData,
- *   token,
- *   [],
- *   { on404: () => router.push("/intake/contact") }
- * );
- */
-export async function withTokenRefresh<T extends (...args: any[]) => Promise<any>>(
-  apiCall: T,
-  token: string,
-  args: Parameters<T> extends [string, ...infer Rest] ? Rest : never[] = [] as any,
-  options?: {
-    on404?: () => void | Promise<void>;
-    onError?: (error: any) => void | Promise<void>;
-    getToken?: () => string | null;
-    setToken?: (newToken: string) => void;
-  }
-): Promise<ReturnType<T> | null> {
-  const getToken = options?.getToken || (() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem("token");
-    }
-    return null;
-  });
-  
-  const setToken = options?.setToken || ((newToken: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("token", newToken);
-    }
-  });
-
-  // First attempt with current token
-  const result = await apiCall(token, ...args) as Awaited<ReturnType<T>>;
-
-  // Check if we got a 401 error
-  if (result && typeof result === 'object' && 'error' in result && result.error === 401) {
-    // Try to refresh the token
-    const newTokenDataRes = await getNewToken(token);
-    
-    if (newTokenDataRes?.newToken) {
-      // Update token in storage
-      setToken(newTokenDataRes.newToken);
-      
-      // Retry the API call with new token
-      const retryResult = await apiCall(newTokenDataRes.newToken, ...args) as Awaited<ReturnType<T>>;
-      return retryResult;
-    }
-
-    // Handle 404 from token refresh (token not found/invalid)
-    if (newTokenDataRes?.status === 404) {
-      if (options?.on404) {
-        await options.on404();
-      }
-      return null;
-    }
-
-    // Handle other token refresh errors
-    if (options?.onError) {
-      await options.onError(newTokenDataRes);
-    }
-    return null;
-  }
-
-  return result;
 }
 
 export async function initiateCheckout(token: string, body: any): Promise<{ data?: any, error?: any }> {

@@ -79,8 +79,8 @@ export default function CheckoutPage() {
         { on404: () => router.push("/intake/contact") }
       );
 
-      if (data && !data?.error) {
-        setPatientData(data?.patient);
+      if (data?.status === 200) {
+        setPatientData(data.data?.data?.patient);
         // Add a delay to ensure all state updates from setPatientData are complete
         // This prevents validation from running before fields are populated
         setTimeout(() => {
@@ -316,7 +316,7 @@ export default function CheckoutPage() {
       return null; // Error already handled by wrapper
     }
 
-    if (!initiateCheckoutData?.error) {
+    if (initiateCheckoutData?.status === 200) {
       // Fire Add to Cart postback (only once per transaction_id)
       const transactionId = getEverflowTransactionId();
       if (transactionId) {
@@ -333,8 +333,8 @@ export default function CheckoutPage() {
             { on404: () => {} }
           );
           
-          if (patientData && !patientData?.error) {
-            const patient = patientData.patient;
+          if (patientData?.status === 200) {
+            const patient = patientData.data?.data?.patient;
             fetch("/api/everflow/postback", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -367,15 +367,15 @@ export default function CheckoutPage() {
         }
       }
       
-      return initiateCheckoutData.data;
+      return initiateCheckoutData.data?.data;
     }
 
-    if (initiateCheckoutData?.error == 409) {
+    if (initiateCheckoutData?.status === 409) {
       router.push("/intake/checkout/success");
       return null;
     }
 
-    if(initiateCheckoutData?.error == 500) {
+    if (initiateCheckoutData?.status && initiateCheckoutData.status >= 500) {
       toast.error("Server error. Please try again later.");
       return null;
     }
@@ -511,7 +511,7 @@ export default function CheckoutPage() {
         return; // Error already handled by wrapper
       }
 
-      if (!updatePatientData?.error) {
+      if (updatePatientData?.status === 200) {
         toast.success("Patient data updated successfully!");
         setIsAddressSubmitted(true);
         // Extract digits from phone number and remove country code if present
@@ -652,8 +652,8 @@ export default function CheckoutPage() {
         { on404: () => {} }
       );
       
-      if (patientData && !patientData?.error) {
-        const patient = patientData.patient;
+      if (patientData?.status === 200) {
+        const patient = patientData.data?.data?.patient;
         const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
         
         // Fire Everflow Purchase postback

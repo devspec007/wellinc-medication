@@ -6,39 +6,23 @@ const SECRET_API_KEY = process.env.SECRET_API_KEY!;
 
 export async function POST(req: Request) {
   try {
-    // Get body parameters
-    const { token, correlationId, ssn } = await req.json();
-    
-    // Validate token
+    const body = await req.json();
+    const { token, correlationId, uploadType, fileName, fileType, documentType } = body;
+
     if (!token) {
       return NextResponse.json({ error: 'Authorization token is required.' }, { status: 401 });
     }
-    
-    // Validate correlation ID
     if (!correlationId) {
       return NextResponse.json({ error: 'Correlation ID is required.' }, { status: 400 });
     }
-
-    // Validate SSN
-    if (!ssn) {
-      return NextResponse.json({ error: 'SSN is required.' }, { status: 400 });
-    }
-
-    // Mock 400 for UI testing without calling real server (set MOCK_SSN_VERIFY_400=true in .env.local)
-    if (process.env.MOCK_SSN_VERIFY_400 === 'true') {
+    if (!uploadType || !fileName || !fileType || !documentType) {
       return NextResponse.json(
-        {
-          error: {
-            code: 'BAD_REQUEST',
-            message: 'The SSN provided does not match our records',
-          },
-          requestId: 'd5f1e71d-fe06-470b-98db-b6e0e6a7cb27',
-        },
+        { error: 'uploadType, fileName, fileType, and documentType are required.' },
         { status: 400 }
       );
     }
 
-    const res = await fetch(`${BASE_URL}/patients/me/verify-identity`, {
+    const res = await fetch(`${BASE_URL}${API_CONFIG.FILES_UPLOAD_URL}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,29 +30,46 @@ export async function POST(req: Request) {
         'x-api-key': SECRET_API_KEY,
         'x-client-correlation-id': correlationId,
       },
-      body: JSON.stringify({ ssn }),
+      body: JSON.stringify({
+        uploadType,
+        fileName,
+        fileType,
+        documentType,
+      }),
     });
-    
-    let data: { error?: string | { code?: string; message?: string }; message?: string; requestId?: string } = {};
+
+    let data: {
+      uploadUrl?: string;
+      fields?: Record<string, string>;
+      fileKey?: string;
+      expiresIn?: number;
+      error?: string | { code?: string; message?: string };
+      message?: string;
+    } = {};
     try {
       data = await res.json();
     } catch {
       // Non-JSON or empty body
     }
+
     if (!res.ok) {
-      // 400 body: { error: { code: "BAD_REQUEST", message: "The SSN provided does not match our records" }, requestId }
       const err = data?.error;
       const message =
         typeof err === 'string'
           ? err
           : (typeof err === 'object' && err != null && typeof (err as { message?: string }).message === 'string'
               ? (err as { message: string }).message
-              : data?.message ?? 'Failed to verify identity.');
+              : data?.message ?? 'Failed to get upload URL.');
       return NextResponse.json({ error: message }, { status: res.status });
     }
-    return NextResponse.json(data);
+
+    return NextResponse.json({
+      uploadUrl: data.uploadUrl,
+      fields: data.fields ?? {},
+      fileKey: data.fileKey,
+      expiresIn: data.expiresIn,
+    });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Server error.' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Server error.' }, { status: 500 });
   }
 }
-

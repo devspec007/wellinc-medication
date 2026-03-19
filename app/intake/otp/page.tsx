@@ -103,18 +103,15 @@ export default function OtpPage() {
       }
       loginWithOtp({ email, otp: otpValue }).then(res => {
         setSubmitting(false);
-        if (res.token) {
+        if (res.data?.token) {
           toast.success("OTP verified successfully!");
-          localStorage.setItem("token", res.token);
+          localStorage.setItem("token", res.data.token);
           router.push("/intake/treatments");
           setHasLoggedIn(true);
-        } else if (res.error) {
-          toast.error(res.error);
-          // Reset OTP state for retry
+        } else {
+          toast.error(res.data?.error || "Failed to verify OTP. Please try again.");
           setOtp(Array(OTP_LENGTH).fill(""));
           inputsRef.current[0]?.focus();
-        } else {
-          toast.error("Unexpected error verifying OTP.");
         }
       });
     }

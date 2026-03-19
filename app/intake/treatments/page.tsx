@@ -195,8 +195,8 @@ export default function TreatmentsPage() {
         { on404: () => router.push("/intake/contact") }
       );
 
-      if (res && !res?.error && res?.plans) {
-        setPlans(res.plans);
+      if (res?.status === 200 && res.data?.membershipPlans) {
+        setPlans(res.data.membershipPlans);
         setLoading(false);
         return;
       }
@@ -249,7 +249,7 @@ export default function TreatmentsPage() {
         { on404: () => router.push("/intake/contact") }
       );
 
-      if (res && res.success) {
+      if (res?.status === 200) {
         localStorage.setItem("isQuestionSubmitted", "true");
         return;
       }

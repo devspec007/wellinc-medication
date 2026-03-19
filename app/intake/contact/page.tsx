@@ -62,7 +62,7 @@ export default function ContactPage() {
         // Call signup API
         // Get firstName and lastName from localStorage (from 'intake-medical-review')
         initSession().then(res => {
-            if (!res.success) return toast.error("Cannot initialize session.");
+            if (res.status !== 200) return toast.error("Cannot initialize session.");
             const correlationId = localStorage.getItem("client-correlation-id");
             const review = JSON.parse(localStorage.getItem("intake-medical-review") || "{}")
             const firstName = review.firstName || "";
@@ -70,11 +70,11 @@ export default function ContactPage() {
 
             if(correlationId) {
                 getPatientBasic({ email }).then(res => {
-                    if (!res.patientExists) {
+                    if (!res.data) {
                         //Sign up
                         signup({ email, phone, firstName, lastName }).then(res => {
-                            if (res.token) {
-                                localStorage.setItem("token", res.token);
+                            if (res.data?.token) {
+                                localStorage.setItem("token", res.data.token);
                                 toast.success("Sign up successful!");
                                 
                                 // Fire Lead postback (only once per transaction_id)
@@ -118,8 +118,8 @@ export default function ContactPage() {
                     } else {
                         //Login-Send OTP
                         sendOtp({ email }).then(otpRes => {
-                            if (otpRes.error) {
-                                toast.error(otpRes.error);
+                            if (otpRes.status !== 200) {
+                                toast.error(otpRes.data?.error || "Failed to send OTP. Please try again.");
                             } else {
                                 toast.success("OTP sent successfully!");
                                 

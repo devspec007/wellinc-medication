@@ -12,9 +12,15 @@ export const API_CONFIG = {
   QUESTIONS_ANSWER: "/questions-answers",
   REFRESH_TOKEN: "/auth/refresh",
   INITIATE_CHECKOUT: "/initiate-checkout",
+  FILES_UPLOAD_URL: "/files/upload-url",
+  FILES_CONFIRM_UPLOAD: "/files/confirm-upload",
 };
 
-// --- API Functions ---
+export interface ApiResult {
+  data?: any;
+  status: number;
+}
+
 export interface SignupParams {
   email: string;
   phone: string;
@@ -22,261 +28,154 @@ export interface SignupParams {
   lastName: string;
 }
 
-// Helper function to get or generate correlation ID
+export interface UploadUrlPayload {
+  uploadType: "document";
+  fileName: string;
+  fileType: string;
+  documentType: "identity";
+}
+
 function getCorrelationId(isRecreated: boolean = false): string {
   const STORAGE_KEY = "client-correlation-id";
-  
   let correlationId = localStorage.getItem(STORAGE_KEY);
   if (!correlationId || isRecreated) {
-    // Generate UUID v4
     correlationId = crypto.randomUUID();
     localStorage.setItem(STORAGE_KEY, correlationId);
   }
-
   return correlationId;
 }
 
-export async function initSession(body?: any): Promise<{ success?: boolean; error?: string }> {
+async function safeJson(res: Response): Promise<any> {
+  try { return await res.json(); } catch { return undefined; }
+}
+
+// --- Public API Functions ---
+
+export async function initSession(body?: any): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId(true);
-    
     const res = await fetch("/api/session-init", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, correlationId })
+      body: JSON.stringify({ ...body, correlationId }),
     });
-    
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.error || "Session initialization failed." };
-    }
-    if (data === true) {
-      return { success: true };
-    }
-    return { success: false };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }
 
-export async function signup({ email, phone, firstName, lastName }: SignupParams): Promise<{ token?: string; error?: string }> {
+export async function signup({ email, phone, firstName, lastName }: SignupParams): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, phone, firstName, lastName, correlationId })
+      body: JSON.stringify({ email, phone, firstName, lastName, correlationId }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.error || "Signup failed." };
-    }
-    return { token: data?.token };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }
 
-export async function sendOtp({ email }: { email: string }): Promise<{ success?: boolean; error?: string }> {
+export async function sendOtp({ email }: { email: string }): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, correlationId })
+      body: JSON.stringify({ email, correlationId }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.error || "Failed to send OTP." };
-    }
-    return { success: true };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }
 
-export async function loginWithOtp({ email, otp }: { email: string; otp: string }): Promise<{ token?: string; error?: string }> {
+export async function loginWithOtp({ email, otp }: { email: string; otp: string }): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, correlationId })
+      body: JSON.stringify({ email, otp, correlationId }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.error || "Login failed." };
-    }
-    return { token: data?.token };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }
 
-export async function getPatientBasic({ email }: { email: string }): Promise<{ patientExists?: boolean; error?: string }> {
+export async function getPatientBasic({ email }: { email: string }): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const params = new URLSearchParams({ email, correlationId });
-    const res = await fetch(`/api/patients/basic?${params.toString()}`, {
-      method: "GET",
-    });
-    
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.error || "Failed to check patient." };
-    }
-    return { patientExists: data };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
-  }
-}
-
-// API Using Token
-export async function getPatientData(token: string): Promise<{ patient?: any; error?: any }> {
-  try {
-    const correlationId = getCorrelationId();
-    const res = await fetch("/api/patients/get-patient-data", {
-      method: "GET",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "x-client-correlation-id": correlationId 
-      },
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: res.status };
-    }
-    return { patient: data?.data?.patient };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
-  }
-}
-
-export async function answerQuestions(token: string, questions: any, previousMedication?: any): Promise<{ success?: boolean; error?: any }> {
-  try {
-    const correlationId = getCorrelationId();
-    const res = await fetch("/api/questions-answers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ questions, correlationId, token, previousMedication })
-    });
-    if (res.status === 200) {
-      return { success: true, error: null };
-    }
-    return { success: false, error: res.status };
-  } catch (error: any) {
-    return { success: false, error: error.message || "Network error." };
-  }
-}
-
-export async function getMembershipPlans(token: string): Promise<{ plans?: any; error?: any }> {
-  try {
-    const correlationId = getCorrelationId();
-    const res = await fetch("/api/membership-plans", {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "x-client-correlation-id": correlationId
-      }
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: res.status };
-    }
-    return { plans: data?.membershipPlans, error: null };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
-  }
-}
-
-export async function getNewToken(token: string): Promise<{ newToken?: string; status?: any }> {
-  try {
-    const correlationId = getCorrelationId();
-    const res = await fetch("/api/auth/refresh-token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, correlationId })
-    });
-
-    const data = await res.json();
-    return { newToken: data?.newToken, status: res.status };
-  } catch (error: any) {
+    const res = await fetch(`/api/patients/basic?${params.toString()}`, { method: "GET" });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
     return { status: 500 };
   }
 }
 
 // --- Token Refresh Wrapper ---
+
+async function getNewToken(token: string): Promise<{ newToken?: string; status: number }> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/auth/refresh-token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, correlationId }),
+    });
+    const data = await safeJson(res);
+    return { newToken: data?.newToken, status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
 /**
- * Wrapper function that automatically handles token refresh on 401 errors.
- * 
- * @param apiCall - The API function to call (must accept token as first parameter)
- * @param token - The current authentication token
- * @param args - Additional arguments to pass to the API function (after token)
- * @param options - Optional configuration for error handling
- * @returns The result from the API call, or null if error handling redirects
- * 
- * @example
- * const result = await withTokenRefresh(
- *   getPatientData,
- *   token,
- *   [],
- *   { on404: () => router.push("/intake/contact") }
- * );
+ * Calls apiCall with the given token. On 401, refreshes the token and retries once.
+ * On refresh failure (401/404), calls on404() and returns null.
+ * All token-based API functions must return ApiResult ({ data?, status }).
  */
-export async function withTokenRefresh<T extends (...args: any[]) => Promise<any>>(
-  apiCall: T,
+export async function withTokenRefresh(
+  apiCall: (token: string, ...args: any[]) => Promise<ApiResult>,
   token: string,
-  args: Parameters<T> extends [string, ...infer Rest] ? Rest : never[] = [] as any,
+  args: any[] = [],
   options?: {
     on404?: () => void | Promise<void>;
     onError?: (error: any) => void | Promise<void>;
     getToken?: () => string | null;
     setToken?: (newToken: string) => void;
   }
-): Promise<ReturnType<T> | null> {
-  const getToken = options?.getToken || (() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem("token");
-    }
-    return null;
-  });
-  
-  const setToken = options?.setToken || ((newToken: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("token", newToken);
-    }
+): Promise<ApiResult | null> {
+  const setToken = options?.setToken || ((t: string) => {
+    if (typeof window !== "undefined") localStorage.setItem("token", t);
   });
 
-  // First attempt with current token
-  const result = await apiCall(token, ...args) as Awaited<ReturnType<T>>;
+  const result = await apiCall(token, ...args);
 
-  // Check if we got a 401 error
-  if (result && typeof result === 'object' && 'error' in result && result.error === 401) {
-    // Try to refresh the token
-    const newTokenDataRes = await getNewToken(token);
-    
-    if (newTokenDataRes?.newToken) {
-      // Update token in storage
-      setToken(newTokenDataRes.newToken);
-      
-      // Retry the API call with new token
-      const retryResult = await apiCall(newTokenDataRes.newToken, ...args) as Awaited<ReturnType<T>>;
-      return retryResult;
+  if (result.status === 401) {
+    const refreshRes = await getNewToken(token);
+
+    if (refreshRes.newToken) {
+      setToken(refreshRes.newToken);
+      return await apiCall(refreshRes.newToken, ...args);
     }
 
-    // Handle 404 from token refresh (token not found/invalid)
-    if (newTokenDataRes?.status === 404) {
+    if (refreshRes.status === 401 || refreshRes.status === 404) {
       if (options?.on404) {
         await options.on404();
+        localStorage.setItem("token", "");
       }
       return null;
     }
 
-    // Handle other token refresh errors
     if (options?.onError) {
-      await options.onError(newTokenDataRes);
+      await options.onError(refreshRes);
+      localStorage.setItem("token", "");
     }
     return null;
   }
@@ -284,56 +183,151 @@ export async function withTokenRefresh<T extends (...args: any[]) => Promise<any
   return result;
 }
 
-export async function initiateCheckout(token: string, body: any): Promise<{ data?: any, error?: any }> {
+// --- Token-Based API Functions ---
+
+export async function getPatientData(token: string): Promise<ApiResult> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/patients/get-patient-data", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        "x-client-correlation-id": correlationId,
+      },
+    });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
+export async function answerQuestions(token: string, questions: any, previousMedication?: any): Promise<ApiResult> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/questions-answers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questions, correlationId, token, previousMedication }),
+    });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
+export async function getMembershipPlans(token: string): Promise<ApiResult> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/membership-plans", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "x-client-correlation-id": correlationId,
+      },
+    });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
+export async function initiateCheckout(token: string, body: any): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/initiate-checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, correlationId, token })
+      body: JSON.stringify({ ...body, correlationId, token }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: res.status };
-    }
-    return { data: data?.data, error: null };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }
 
-export async function updatePatient(token: string, body: any): Promise<{ data?: any, error?: any }> {
+export async function updatePatient(token: string, body: any): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/patients/me", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, correlationId, token })
+      body: JSON.stringify({ ...body, correlationId, token }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: res.status };
-    }
-    return { data: data?.data, error: null };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }
 
-export async function verifyIdentity(token: string, ssn: string): Promise<{ data?: any; error?: string }> {
+export async function verifyIdentity(token: string, ssn: string): Promise<ApiResult> {
   try {
     const correlationId = getCorrelationId();
     const res = await fetch("/api/patients/verify-identity", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ssn, correlationId, token })
+      body: JSON.stringify({ ssn, correlationId, token }),
     });
-    const data = await res.json();
-    if (!res.ok) {
-      return { error: data.error || "Failed to verify identity." };
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
+export async function getUploadUrl(token: string, payload: UploadUrlPayload): Promise<ApiResult> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/files/upload-url", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-client-correlation-id": correlationId,
+      },
+      body: JSON.stringify({ token, correlationId, ...payload }),
+    });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
+/**
+ * Uploads a file directly to the S3 presigned URL.
+ * Fields from getUploadUrl response must all be appended before the file.
+ * S3 returns 204 No Content on success (no JSON body).
+ */
+export async function uploadFileToPresignedUrl(
+  uploadUrl: string,
+  fields: Record<string, string>,
+  file: File
+): Promise<ApiResult> {
+  try {
+    const formData = new FormData();
+    for (const [key, value] of Object.entries(fields)) {
+      formData.append(key, value);
     }
-    return { data };
-  } catch (error: any) {
-    return { error: error.message || "Network error." };
+    formData.append("file", file);
+    const res = await fetch(uploadUrl, { method: "POST", body: formData });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
+  }
+}
+
+export async function confirmUpload(token: string, fileKey: string): Promise<ApiResult> {
+  try {
+    const correlationId = getCorrelationId();
+    const res = await fetch("/api/files/confirm-upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-client-correlation-id": correlationId,
+      },
+      body: JSON.stringify({ token, correlationId, fileKey }),
+    });
+    return { data: await safeJson(res), status: res.status };
+  } catch {
+    return { status: 500 };
   }
 }

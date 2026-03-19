@@ -38,4 +38,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: error.message || 'Server error.' }, { status: 500 });
   }
 }
-

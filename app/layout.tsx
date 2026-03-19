@@ -26,8 +26,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Complete your medication intake",
-  description: "Complete your medication intake",
+  title: "GLP-1 Weight Loss Medications – Well.inc",
+  description: "Lose 1-2lbs per week! The proven way to lose up to 25% of your body weight fast!",
 };
 
 import { Toaster } from "react-hot-toast";

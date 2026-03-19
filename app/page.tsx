@@ -9,6 +9,10 @@ import ProductsSection from '@/components/landing-page/ProductsSection';
 import FAQ from '@/components/landing-page/FAQ';
 import Footer from '@/components/landing-page/Footer';
 
+export const metadata = {
+  title: 'GLP-1 Weight Loss Medications – Well.inc',
+};
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-white">

@@ -358,7 +358,7 @@ export default function TreatmentsPage() {
                       getPlanColors("Semaglutide").backgroundColor,
                   }}
                 >
-                  <img className="w-8/10" src="/assets/imgs/Semaglutide.jpg" />
+                  <img className="w-8/10" src="/assets/imgs/Semaglutide.png" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <div className="text-xl leading-6 font-semibold pr-5 self-start">
@@ -442,7 +442,7 @@ export default function TreatmentsPage() {
                       getPlanColors("Tirzepatide").backgroundColor,
                   }}
                 >
-                  <img className="w-8/10" src="/assets/imgs/Tirzepatide.jpg" />
+                  <img className="w-8/10" src="/assets/imgs/Tirzepatide.png" />
                 </div>
                 <div className="flex flex-col justify-center">
                   <div className="text-xl leading-6 font-semibold pr-5 self-start">

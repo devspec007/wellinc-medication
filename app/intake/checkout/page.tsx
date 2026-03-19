@@ -51,6 +51,10 @@ export default function CheckoutPage() {
   const router = useRouter();
   useEffect(() => {
     const selectedProduct = JSON.parse(localStorage.getItem("selectedProduct") || "{}");
+    if (typeof selectedProduct?.medication === "string") {
+      selectedProduct.medication = selectedProduct.medication.replace(/memberships?/gi, "").replace(/\s{2,}/g, " ").trim();
+    }
+
     setSelectedProduct(selectedProduct);
     
     // Track ViewContent event for Facebook Pixel

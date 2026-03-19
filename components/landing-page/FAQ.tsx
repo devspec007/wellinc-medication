@@ -1,6 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+/** Hash for deep-linking to the pricing FAQ (used by "See pricing" CTAs). */
+export const PRICING_FAQ_HASH = 'faq-pricing';
+
+/** Fired when "See pricing" is clicked while already on the pricing FAQ hash. */
+export const OPEN_PRICING_FAQ_EVENT = 'wellinc-open-pricing-faq';
 
 const faqs = [
   {
@@ -119,8 +125,36 @@ const faqs = [
   },
 ];
 
+const PRICING_FAQ_INDEX = faqs.findIndex((f) => f.question === 'How does the pricing work?');
+
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const openPricingFaqAndScroll = useCallback(() => {
+    setOpenIndex(PRICING_FAQ_INDEX);
+    window.setTimeout(() => {
+      document.getElementById(PRICING_FAQ_HASH)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 120);
+  }, []);
+
+  useEffect(() => {
+    const syncFromHash = () => {
+      if (window.location.hash === `#${PRICING_FAQ_HASH}`) {
+        openPricingFaqAndScroll();
+      }
+    };
+    const onRepeatClick = () => openPricingFaqAndScroll();
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener(OPEN_PRICING_FAQ_EVENT, onRepeatClick);
+    return () => {
+      window.removeEventListener('hashchange', syncFromHash);
+      window.removeEventListener(OPEN_PRICING_FAQ_EVENT, onRepeatClick);
+    };
+  }, [openPricingFaqAndScroll]);
 
   const toggleAccordion = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -229,7 +263,11 @@ export default function FAQ() {
       
       <div className="space-y-4">
         {faqs.map((faq, index) => (
-          <div key={index} className={`border border-gray-200 rounded-lg ${openIndex === index ? 'open' : ''}`}>
+          <div
+            key={index}
+            id={index === PRICING_FAQ_INDEX ? PRICING_FAQ_HASH : undefined}
+            className={`border border-gray-200 rounded-lg ${index === PRICING_FAQ_INDEX ? 'scroll-mt-28' : ''} ${openIndex === index ? 'open' : ''}`}
+          >
             <button
               className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 text-lg font-medium text-gray-900 focus:outline-none group"
               onClick={() => toggleAccordion(index)}

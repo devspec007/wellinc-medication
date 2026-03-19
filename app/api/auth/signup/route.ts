@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         "x-api-key": SECRET_API_KEY,
         "x-client-correlation-id": correlationId,
       },
-      body: JSON.stringify({ email, phoneNumber: phone, firstName, lastName, testModeEnabled: true })
+      body: JSON.stringify({ email, phoneNumber: phone, firstName, lastName, testModeEnabled: false })
     });
     const data = await res.json();
     if (!res.ok) {

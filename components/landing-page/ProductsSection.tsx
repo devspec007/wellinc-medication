@@ -2,8 +2,11 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import { OPEN_PRICING_FAQ_EVENT, PRICING_FAQ_HASH } from '@/components/landing-page/FAQ';
 
 export default function ProductsSection() {
+  const pathname = usePathname();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const features = [
@@ -126,7 +129,17 @@ export default function ProductsSection() {
             Get started
           </Link>
           <Link
-            href="/intake/height_weight"
+            href={`/#${PRICING_FAQ_HASH}`}
+            scroll={false}
+            onClick={(e) => {
+              if (pathname !== '/') return;
+              e.preventDefault();
+              if (window.location.hash === `#${PRICING_FAQ_HASH}`) {
+                window.dispatchEvent(new Event(OPEN_PRICING_FAQ_EVENT));
+              } else {
+                window.location.hash = PRICING_FAQ_HASH;
+              }
+            }}
             className="bg-white border border-gray-300 text-gray-800 px-12 py-3 rounded-full font-semibold hover:bg-blue-500 hover:text-white transition"
           >
             See pricing

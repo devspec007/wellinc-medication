@@ -50,10 +50,10 @@ export default function TreatmentsPage() {
     let imgSrc = null;
     if(selectedPlan?.name.toLowerCase().includes("semaglutide")) {
       productGroupId = 3;
-      imgSrc = "/assets/imgs/Semaglutide.jpg";
+      imgSrc = "/assets/imgs/Semaglutide.png";
     } else {
       productGroupId = 7;
-      imgSrc = "/assets/imgs/Tirzepatide.jpg";
+      imgSrc = "/assets/imgs/Tirzepatide.png";
     }
     
     const selectedProduct = {

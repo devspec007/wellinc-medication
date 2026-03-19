@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'transaction_id is required' }, { status: 400 });
     }
     
-    console.log(`[Everflow] Received transaction_id: ${transaction_id}`);
+    // console.log(`[Everflow] Received transaction_id: ${transaction_id}`);
     
     // Store for reference (you could store in DB and associate with user later)
     const timestamp = Date.now();

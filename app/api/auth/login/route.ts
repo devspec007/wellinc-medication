@@ -22,7 +22,6 @@ export async function POST(req: Request) {
       body: JSON.stringify({ email, otp })
     });
     const data = await res.json();
-    console.log(data);
     if (!res.ok) {
       return NextResponse.json({ error: data?.error?.message || "Login failed." }, { status: res.status });
     }

@@ -17,8 +17,6 @@ export async function GET(req: Request) {
     if (!correlationId) {
       return NextResponse.json({ error: 'Correlation ID is required.' }, { status: 400 });
     }
-    console.log("correlationId: ", correlationId);
-    console.log("email: ", email);
     const params = new URLSearchParams({ email });
     const res = await fetch(`${BASE_URL}${API_CONFIG.PATIENTS_BASIC}?${params.toString()}`, {
       method: 'GET',

@@ -24,7 +24,6 @@ export async function POST(req: Request) {
     // Build medicationData if previousMedication exists
     const medicationData: any = {};
     if (previousMedication && previousMedication.currentWeightLoss) {
-      console.log("previousMedication::API::Route::", previousMedication);
       medicationData.currentDose = previousMedication.currentDose || null;
       medicationData.currentWeightLoss = previousMedication.currentWeightLoss || null;
       medicationData.dosePreference = previousMedication.dosePreference || null;
